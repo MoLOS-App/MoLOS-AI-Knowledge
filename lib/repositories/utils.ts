@@ -19,6 +19,10 @@ export function parseJsonObject<T>(value: string | null | undefined, fallback: T
 
 export function toJsonString(value: unknown, fallback: string): string {
   try {
+    if (typeof value === "string") {
+      JSON.parse(value);
+      return value;
+    }
     return JSON.stringify(value ?? JSON.parse(fallback));
   } catch {
     return fallback;
