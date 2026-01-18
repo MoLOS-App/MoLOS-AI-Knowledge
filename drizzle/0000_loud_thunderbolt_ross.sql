@@ -1,6 +1,4 @@
--- Normalized for MoLOS module migration validation
-
-CREATE TABLE `MoLOS-AI-Knowledge_ab_tests` (
+CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_ab_tests` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`name` text NOT NULL,
@@ -12,7 +10,9 @@ CREATE TABLE `MoLOS-AI-Knowledge_ab_tests` (
 	`updated_at` integer DEFAULT (strftime('%s','now')) NOT NULL
 );
 
-CREATE TABLE `MoLOS-AI-Knowledge_humanizer_jobs` (
+--> statement-breakpoint
+
+CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_humanizer_jobs` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`input_text` text NOT NULL,
@@ -25,7 +25,9 @@ CREATE TABLE `MoLOS-AI-Knowledge_humanizer_jobs` (
 	`updated_at` integer DEFAULT (strftime('%s','now')) NOT NULL
 );
 
-CREATE TABLE `MoLOS-AI-Knowledge_llm_file_versions` (
+--> statement-breakpoint
+
+CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_llm_file_versions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`llm_file_id` text NOT NULL,
 	`user_id` text NOT NULL,
@@ -38,7 +40,9 @@ CREATE TABLE `MoLOS-AI-Knowledge_llm_file_versions` (
 	FOREIGN KEY (`llm_file_id`) REFERENCES `MoLOS-AI-Knowledge_llm_files`(`id`)  ON DELETE cascade
 );
 
-CREATE TABLE `MoLOS-AI-Knowledge_llm_files` (
+--> statement-breakpoint
+
+CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_llm_files` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`title` text NOT NULL,
@@ -49,7 +53,9 @@ CREATE TABLE `MoLOS-AI-Knowledge_llm_files` (
 	`updated_at` integer DEFAULT (strftime('%s','now')) NOT NULL
 );
 
-CREATE TABLE `MoLOS-AI-Knowledge_playground_sessions` (
+--> statement-breakpoint
+
+CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_playground_sessions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`prompt_id` text,
@@ -63,7 +69,9 @@ CREATE TABLE `MoLOS-AI-Knowledge_playground_sessions` (
 	`updated_at` integer DEFAULT (strftime('%s','now')) NOT NULL
 );
 
-CREATE TABLE `MoLOS-AI-Knowledge_prompt_chains` (
+--> statement-breakpoint
+
+CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_prompt_chains` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`name` text NOT NULL,
@@ -74,7 +82,9 @@ CREATE TABLE `MoLOS-AI-Knowledge_prompt_chains` (
 	`updated_at` integer DEFAULT (strftime('%s','now')) NOT NULL
 );
 
-CREATE TABLE `MoLOS-AI-Knowledge_prompt_deployments` (
+--> statement-breakpoint
+
+CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_prompt_deployments` (
 	`id` text PRIMARY KEY NOT NULL,
 	`prompt_id` text NOT NULL,
 	`user_id` text NOT NULL,
@@ -84,7 +94,9 @@ CREATE TABLE `MoLOS-AI-Knowledge_prompt_deployments` (
 	FOREIGN KEY (`prompt_id`) REFERENCES `MoLOS-AI-Knowledge_prompts`(`id`)  ON DELETE cascade
 );
 
-CREATE TABLE `MoLOS-AI-Knowledge_prompt_versions` (
+--> statement-breakpoint
+
+CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_prompt_versions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`prompt_id` text NOT NULL,
 	`user_id` text NOT NULL,
@@ -96,7 +108,9 @@ CREATE TABLE `MoLOS-AI-Knowledge_prompt_versions` (
 	FOREIGN KEY (`prompt_id`) REFERENCES `MoLOS-AI-Knowledge_prompts`(`id`)  ON DELETE cascade
 );
 
-CREATE TABLE `MoLOS-AI-Knowledge_prompts` (
+--> statement-breakpoint
+
+CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_prompts` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`title` text NOT NULL,
@@ -112,7 +126,9 @@ CREATE TABLE `MoLOS-AI-Knowledge_prompts` (
 	`updated_at` integer DEFAULT (strftime('%s','now')) NOT NULL
 );
 
-CREATE TABLE `MoLOS-AI-Knowledge_shared_libraries` (
+--> statement-breakpoint
+
+CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_shared_libraries` (
 	`id` text PRIMARY KEY NOT NULL,
 	`owner_user_id` text NOT NULL,
 	`name` text NOT NULL,
@@ -122,7 +138,9 @@ CREATE TABLE `MoLOS-AI-Knowledge_shared_libraries` (
 	`updated_at` integer DEFAULT (strftime('%s','now')) NOT NULL
 );
 
-CREATE TABLE `MoLOS-AI-Knowledge_shared_library_members` (
+--> statement-breakpoint
+
+CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_shared_library_members` (
 	`id` text PRIMARY KEY NOT NULL,
 	`library_id` text NOT NULL,
 	`user_id` text NOT NULL,
@@ -131,7 +149,9 @@ CREATE TABLE `MoLOS-AI-Knowledge_shared_library_members` (
 	FOREIGN KEY (`library_id`) REFERENCES `MoLOS-AI-Knowledge_shared_libraries`(`id`)  ON DELETE cascade
 );
 
-CREATE TABLE `MoLOS-AI-Knowledge_shared_library_prompts` (
+--> statement-breakpoint
+
+CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_shared_library_prompts` (
 	`id` text PRIMARY KEY NOT NULL,
 	`library_id` text NOT NULL,
 	`prompt_id` text NOT NULL,
@@ -140,7 +160,9 @@ CREATE TABLE `MoLOS-AI-Knowledge_shared_library_prompts` (
 	FOREIGN KEY (`prompt_id`) REFERENCES `MoLOS-AI-Knowledge_prompts`(`id`)  ON DELETE cascade
 );
 
-CREATE TABLE `MoLOS-AI-Knowledge_usage_analytics` (
+--> statement-breakpoint
+
+CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_usage_analytics` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`entity_type` text NOT NULL,

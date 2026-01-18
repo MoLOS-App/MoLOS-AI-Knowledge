@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "cd899419-21ae-4219-81e1-b93255a1ed8c",
+  "id": "d2d765e4-4662-4582-9665-bb3540fc92e1",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "MoLOS-AI-Knowledge_ab_tests": {

@@ -24,8 +24,10 @@ const raw = fs.readFileSync(latestPath, 'utf-8');
 
 const statements = raw
 	.split('--> statement-breakpoint')
+	.flatMap((chunk) => chunk.split(';'))
 	.map((statement) => statement.trim())
-	.filter(Boolean);
+	.filter(Boolean)
+	.filter((statement) => !statement.startsWith('--') && !statement.startsWith('/*'));
 
 const normalized = [];
 
@@ -61,8 +63,9 @@ if (normalized.length === 0) {
 	process.exit(1);
 }
 
-const output = [`-- Normalized for MoLOS module migration validation`, ...normalized]
-	.join('\n\n')
+const output = normalized
+	.map((stmt) => `${stmt};`)
+	.join('\n\n--> statement-breakpoint\n\n')
 	.concat('\n');
 
 fs.writeFileSync(latestPath, output);
