@@ -1,2 +1,2 @@
-export * from "./tasks.store";
+export * from "./ai-knowledge.store";
 export * from "./api";
