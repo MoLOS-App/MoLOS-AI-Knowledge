@@ -1,5 +1,4 @@
-import { TaskRepository } from "$lib/repositories/external_modules/MoLOS-AI-Knowledge/task-repository";
-import { TaskPriority, TaskStatus } from "$lib/models/external_modules/MoLOS-AI-Knowledge";
+import { PromptRepository } from "$lib/repositories/external_modules/MoLOS-AI-Knowledge/prompt-repository";
 import { db } from "$lib/server/db";
 
 type ToolDefinition = {
@@ -13,52 +12,62 @@ type ToolDefinition = {
   execute: (params: any) => Promise<any>;
 };
 
-// Minimal AI tools for the boilerplate module.
 export function getAiTools(userId: string): ToolDefinition[] {
-  const taskRepo = new TaskRepository(db as any);
+  const promptRepo = new PromptRepository(db as any);
 
   return [
     {
-      name: "get_tasks",
-      description: "List tasks for the current user.",
+      name: "list_prompts",
+      description: "List saved prompts for the current user.",
       parameters: {
         type: "object",
         properties: {
-          status: { type: "string", enum: ["to_do", "done"] },
-          limit: { type: "number", default: 50 },
+          search: { type: "string" },
+          category: { type: "string" },
+          tag: { type: "string" },
         },
       },
       execute: async (params) => {
-        let tasks = await taskRepo.getByUserId(userId, params.limit || 50);
-        if (params.status) {
-          tasks = tasks.filter((t) => t.status === params.status);
-        }
-        return tasks;
+        return await promptRepo.listByUserId(userId, {
+          search: params.search,
+          category: params.category,
+          tag: params.tag,
+        });
       },
     },
     {
-      name: "create_task",
-      description: "Create a single task.",
+      name: "create_prompt",
+      description: "Create a new AI prompt template.",
       parameters: {
         type: "object",
         properties: {
           title: { type: "string" },
+          content: { type: "string" },
           description: { type: "string" },
-          priority: { type: "string", enum: ["high", "medium", "low"] },
-          dueDate: { type: "number" },
+          category: { type: "string" },
+          modelTarget: { type: "string" },
+          tags: { type: "array", items: { type: "string" } },
+          isFavorite: { type: "boolean" },
+          isPrivate: { type: "boolean" },
+          commitMessage: { type: "string" },
         },
-        required: ["title"],
+        required: ["title", "content", "category", "modelTarget"],
       },
       execute: async (params) => {
-        return await taskRepo.create({
+        return await promptRepo.create(
+          {
+            title: params.title,
+            content: params.content,
+            description: params.description,
+            category: params.category,
+            modelTarget: params.modelTarget,
+            tags: params.tags ?? [],
+            isFavorite: params.isFavorite ?? false,
+            isPrivate: params.isPrivate ?? false,
+            commitMessage: params.commitMessage,
+          },
           userId,
-          title: params.title,
-          description: params.description,
-          status: TaskStatus.TO_DO,
-          priority: params.priority || TaskPriority.MEDIUM,
-          dueDate: params.dueDate,
-          isCompleted: false,
-        });
+        );
       },
     },
   ];
