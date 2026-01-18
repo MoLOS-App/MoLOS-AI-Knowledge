@@ -29,6 +29,7 @@
 	let libraryPromptIds: string[] = [];
 	let selectedPromptId: string | null = null;
 	let selectedLibraryId: string | null = null;
+	let visiblePrompts: Prompt[] = [];
 
 	let search = '';
 
