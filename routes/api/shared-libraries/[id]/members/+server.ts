@@ -6,8 +6,8 @@ import { SharedLibraryRepository } from "$lib/repositories/external_modules/MoLO
 import { db } from "$lib/server/db";
 
 const CreateSchema = z.object({
-  userId: z.string().min(1),
-  role: z.nativeEnum(LibraryRole).default(LibraryRole.VIEWER),
+  memberId: z.string().min(1),
+  role: z.enum(Object.values(LibraryRole) as [string, ...string[]]).default(LibraryRole.VIEWER),
 });
 
 export const POST: RequestHandler = async ({ locals, params, request }) => {
@@ -20,6 +20,6 @@ export const POST: RequestHandler = async ({ locals, params, request }) => {
   const isOwner = await repo.isOwner(params.id, userId);
   if (!isOwner) throw error(403, "Forbidden");
 
-  const member = await repo.addMember(params.id, payload.userId, payload.role);
+  const member = await repo.addMember(params.id, payload.memberId, payload.role);
   return json(member, { status: 201 });
 };
