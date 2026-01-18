@@ -1,7 +1,7 @@
 {
 	"name": "MoLOS-AI-Knowledge",
 	"private": true,
-	"version": "1.0.0",
+	"version": "0.1.0",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
@@ -9,7 +9,7 @@
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"db:generate": "drizzle-kit generate",
+		"db:generate": "drizzle-kit generate && node scripts/normalize-migration.cjs",
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
 		"db:push": "drizzle-kit push",
@@ -37,6 +37,6 @@
 		"yaml": "^2.0.0",
 		"zod": "^3.0.0"
 	},
-	"description": "MoLOS module for AI Knoledge management, creation and discovery",
-	"author": "MoLOS Team"
+	"description": "AI prompt management, playground, humanizer, and LLM.txt storage",
+	"author": "Senior Technical Product Owner"
 }

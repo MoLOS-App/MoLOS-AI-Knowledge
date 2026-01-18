@@ -214,7 +214,7 @@ export async function createSharedLibrary(
 
 export async function addSharedLibraryMember(
   libraryId: string,
-  data: { userId: string; role: string },
+  data: { memberId: string; role: string },
 ): Promise<SharedLibraryMember> {
   return handle(
     await fetch(`${base}/shared-libraries/${libraryId}/members`, {
