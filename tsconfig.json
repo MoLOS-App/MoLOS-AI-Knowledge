@@ -12,7 +12,9 @@
     "moduleResolution": "bundler",
     "paths": {
       "$lib": ["./lib"],
-      "$lib/*": ["./lib/*"]
+      "$lib/*": ["./lib/*"],
+      "$lib/models/external_modules/MoLOS-AI-Knowledge": ["./lib/models"],
+      "$lib/models/external_modules/MoLOS-AI-Knowledge/*": ["./lib/models/*"]
     }
   }
 }
