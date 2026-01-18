@@ -25,37 +25,42 @@ export const moduleConfig: ModuleConfig = {
     {
       name: "Prompts",
       icon: Sparkles,
-      href: "/ui/MoLOS-AI-Knowledge#prompts",
+      href: "/ui/MoLOS-AI-Knowledge/prompts",
     },
     {
       name: "Playground",
       icon: MessageSquareText,
-      href: "/ui/MoLOS-AI-Knowledge#playground",
+      href: "/ui/MoLOS-AI-Knowledge/playground",
     },
     {
       name: "Humanizer",
       icon: Wand2,
-      href: "/ui/MoLOS-AI-Knowledge#humanizer",
+      href: "/ui/MoLOS-AI-Knowledge/humanizer",
     },
     {
       name: "LLM.txt",
       icon: Files,
-      href: "/ui/MoLOS-AI-Knowledge#llm-files",
+      href: "/ui/MoLOS-AI-Knowledge/llm-files",
     },
     {
       name: "Chains",
       icon: Workflow,
-      href: "/ui/MoLOS-AI-Knowledge#chains",
+      href: "/ui/MoLOS-AI-Knowledge/chains",
     },
     {
       name: "A/B Tests",
       icon: BarChart3,
-      href: "/ui/MoLOS-AI-Knowledge#ab-tests",
+      href: "/ui/MoLOS-AI-Knowledge/ab-tests",
     },
     {
       name: "Libraries",
       icon: Share2,
-      href: "/ui/MoLOS-AI-Knowledge#libraries",
+      href: "/ui/MoLOS-AI-Knowledge/libraries",
+    },
+    {
+      name: "Analytics",
+      icon: BarChart3,
+      href: "/ui/MoLOS-AI-Knowledge/analytics",
     },
   ],
 };
