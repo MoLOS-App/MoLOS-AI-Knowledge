@@ -1,0 +1,192 @@
+import { and, desc, eq, like, or } from "drizzle-orm";
+import { prompts, promptVersions } from "$lib/server/db/schema/external_modules/MoLOS-AI-Knowledge/tables";
+import type {
+  CreatePromptInput,
+  Prompt,
+  PromptVersion,
+  UpdatePromptInput,
+} from "$lib/models/external_modules/MoLOS-AI-Knowledge";
+import { BaseRepository } from "$lib/repositories/base-repository";
+import { parseJsonArray, toJsonString } from "./utils";
+
+export type PromptListFilters = {
+  search?: string;
+  category?: string;
+  tag?: string;
+  favoriteOnly?: boolean;
+  includeDeleted?: boolean;
+};
+
+export class PromptRepository extends BaseRepository {
+  private mapPrompt(row: typeof prompts.$inferSelect): Prompt {
+    return {
+      ...row,
+      tags: parseJsonArray(row.tags),
+    };
+  }
+
+  private mapVersion(row: typeof promptVersions.$inferSelect): PromptVersion {
+    return { ...row };
+  }
+
+  async listByUserId(userId: string, filters: PromptListFilters = {}): Promise<Prompt[]> {
+    const conditions = [eq(prompts.userId, userId)];
+
+    if (!filters.includeDeleted) {
+      conditions.push(eq(prompts.isDeleted, false));
+    }
+
+    if (filters.category) {
+      conditions.push(eq(prompts.category, filters.category));
+    }
+
+    if (filters.favoriteOnly) {
+      conditions.push(eq(prompts.isFavorite, true));
+    }
+
+    if (filters.search) {
+      const term = `%${filters.search}%`;
+      conditions.push(
+        or(
+          like(prompts.title, term),
+          like(prompts.description, term),
+          like(prompts.content, term),
+        ),
+      );
+    }
+
+    if (filters.tag) {
+      conditions.push(like(prompts.tags, `%"${filters.tag}"%`));
+    }
+
+    const results = await this.db
+      .select()
+      .from(prompts)
+      .where(and(...conditions))
+      .orderBy(desc(prompts.updatedAt));
+
+    return results.map((row) => this.mapPrompt(row));
+  }
+
+  async getById(id: string, userId: string): Promise<Prompt | null> {
+    const result = await this.db
+      .select()
+      .from(prompts)
+      .where(and(eq(prompts.id, id), eq(prompts.userId, userId)))
+      .limit(1);
+
+    return result[0] ? this.mapPrompt(result[0]) : null;
+  }
+
+  async create(data: CreatePromptInput, userId: string): Promise<Prompt> {
+    return this.db.transaction((tx) => {
+      const inserted = tx
+        .insert(prompts)
+        .values({
+          userId,
+          title: data.title,
+          description: data.description,
+          content: data.content,
+          category: data.category,
+          modelTarget: data.modelTarget,
+          tags: toJsonString(data.tags, "[]"),
+          isFavorite: data.isFavorite,
+          isPrivate: data.isPrivate,
+        })
+        .returning();
+
+      const promptRow = inserted[0];
+
+      tx.insert(promptVersions).values({
+        promptId: promptRow.id,
+        userId,
+        versionNumber: 1,
+        content: data.content,
+        commitMessage: data.commitMessage,
+      });
+
+      return this.mapPrompt(promptRow);
+    });
+  }
+
+  async update(
+    id: string,
+    userId: string,
+    updates: UpdatePromptInput,
+  ): Promise<Prompt | null> {
+    return this.db.transaction((tx) => {
+      const existing = tx
+        .select()
+        .from(prompts)
+        .where(and(eq(prompts.id, id), eq(prompts.userId, userId)))
+        .limit(1);
+
+      if (!existing[0]) return null;
+
+      const updateData: Record<string, unknown> = {
+        updatedAt: Math.floor(Date.now() / 1000),
+      };
+
+      if (updates.title !== undefined) updateData.title = updates.title;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.content !== undefined) updateData.content = updates.content;
+      if (updates.category !== undefined) updateData.category = updates.category;
+      if (updates.modelTarget !== undefined) updateData.modelTarget = updates.modelTarget;
+      if (updates.tags !== undefined) updateData.tags = toJsonString(updates.tags, "[]");
+      if (updates.isFavorite !== undefined) updateData.isFavorite = updates.isFavorite;
+      if (updates.isPrivate !== undefined) updateData.isPrivate = updates.isPrivate;
+      if (updates.isDeleted !== undefined) updateData.isDeleted = updates.isDeleted;
+
+      const updated = tx
+        .update(prompts)
+        .set(updateData)
+        .where(and(eq(prompts.id, id), eq(prompts.userId, userId)))
+        .returning();
+
+      if (updates.content !== undefined) {
+        const latestVersion = tx
+          .select()
+          .from(promptVersions)
+          .where(and(eq(promptVersions.promptId, id), eq(promptVersions.userId, userId)))
+          .orderBy(desc(promptVersions.versionNumber))
+          .limit(1);
+
+        const nextVersion = (latestVersion[0]?.versionNumber ?? 0) + 1;
+
+        tx.insert(promptVersions).values({
+          promptId: id,
+          userId,
+          versionNumber: nextVersion,
+          content: updates.content,
+          commitMessage: updates.commitMessage,
+        });
+      }
+
+      return updated[0]
+        ? this.mapPrompt(updated[0] as typeof prompts.$inferSelect)
+        : null;
+    });
+  }
+
+  async softDelete(id: string, userId: string): Promise<boolean> {
+    const result = await this.db
+      .update(prompts)
+      .set({
+        isDeleted: true,
+        updatedAt: Math.floor(Date.now() / 1000),
+      })
+      .where(and(eq(prompts.id, id), eq(prompts.userId, userId)));
+
+    return result.changes > 0;
+  }
+
+  async listVersions(promptId: string, userId: string): Promise<PromptVersion[]> {
+    const results = await this.db
+      .select()
+      .from(promptVersions)
+      .where(and(eq(promptVersions.promptId, promptId), eq(promptVersions.userId, userId)))
+      .orderBy(desc(promptVersions.versionNumber));
+
+    return results.map((row) => this.mapVersion(row));
+  }
+}
