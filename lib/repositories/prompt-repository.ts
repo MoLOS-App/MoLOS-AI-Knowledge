@@ -80,25 +80,45 @@ export class PromptRepository extends BaseRepository {
 
   async create(data: CreatePromptInput, userId: string): Promise<Prompt> {
     return this.db.transaction((tx) => {
+      const id = crypto.randomUUID();
+      const now = Math.floor(Date.now() / 1000);
+      const tags = toJsonString(data.tags, "[]");
       const inserted = tx
         .insert(prompts)
         .values({
+          id,
           userId,
           title: data.title,
           description: data.description,
           content: data.content,
           category: data.category,
           modelTarget: data.modelTarget,
-          tags: toJsonString(data.tags, "[]"),
+          tags,
           isFavorite: data.isFavorite,
           isPrivate: data.isPrivate,
         })
         .returning();
 
-      const promptRow = inserted[0];
+      const promptRow =
+        inserted[0] ??
+        ({
+          id,
+          userId,
+          title: data.title,
+          description: data.description,
+          content: data.content,
+          category: data.category,
+          modelTarget: data.modelTarget,
+          tags,
+          isFavorite: data.isFavorite ?? false,
+          isPrivate: data.isPrivate ?? false,
+          isDeleted: false,
+          createdAt: now,
+          updatedAt: now,
+        } as typeof prompts.$inferSelect);
 
       tx.insert(promptVersions).values({
-        promptId: promptRow.id,
+        promptId: promptRow.id ?? id,
         userId,
         versionNumber: 1,
         content: data.content,
@@ -162,9 +182,14 @@ export class PromptRepository extends BaseRepository {
         });
       }
 
-      return updated[0]
-        ? this.mapPrompt(updated[0] as typeof prompts.$inferSelect)
-        : null;
+      const updatedRow =
+        updated[0] ??
+        ({
+          ...existing[0],
+          ...updateData,
+        } as typeof prompts.$inferSelect);
+
+      return updatedRow ? this.mapPrompt(updatedRow) : null;
     });
   }
 
