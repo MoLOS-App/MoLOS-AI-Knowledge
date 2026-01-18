@@ -1,27 +1,63 @@
-/**
- * Tasks Module Configuration
- * Defines routes, navigation items, and metadata for the Tasks module
- *
- * Keep the `id` and `href` aligned with `manifest.yaml` and the UI base route.
- */
-
-import { SquareCheck } from "lucide-svelte";
+import {
+  LayoutDashboard,
+  Sparkles,
+  MessageSquareText,
+  Wand2,
+  Files,
+  Share2,
+  Workflow,
+  BarChart3,
+} from "lucide-svelte";
 import type { ModuleConfig } from "$lib/config/types";
-export const tasksConfig: ModuleConfig = {
+
+export const moduleConfig: ModuleConfig = {
   id: "MoLOS-AI-Knowledge",
-  name: "Sample Tasks",
+  name: "AI Knowledge",
   href: "/ui/MoLOS-AI-Knowledge",
-  icon: SquareCheck,
-  description: "Minimal task CRUD sample module",
+  icon: Sparkles,
+  description: "Manage prompts, LLM files, and AI workflows",
   navigation: [
     {
-      // Single navigation item for the only page in this boilerplate.
-      name: "Tasks",
-      icon: SquareCheck,
+      name: "Dashboard",
+      icon: LayoutDashboard,
       href: "/ui/MoLOS-AI-Knowledge",
+    },
+    {
+      name: "Prompts",
+      icon: Sparkles,
+      href: "/ui/MoLOS-AI-Knowledge#prompts",
+    },
+    {
+      name: "Playground",
+      icon: MessageSquareText,
+      href: "/ui/MoLOS-AI-Knowledge#playground",
+    },
+    {
+      name: "Humanizer",
+      icon: Wand2,
+      href: "/ui/MoLOS-AI-Knowledge#humanizer",
+    },
+    {
+      name: "LLM.txt",
+      icon: Files,
+      href: "/ui/MoLOS-AI-Knowledge#llm-files",
+    },
+    {
+      name: "Chains",
+      icon: Workflow,
+      href: "/ui/MoLOS-AI-Knowledge#chains",
+    },
+    {
+      name: "A/B Tests",
+      icon: BarChart3,
+      href: "/ui/MoLOS-AI-Knowledge#ab-tests",
+    },
+    {
+      name: "Libraries",
+      icon: Share2,
+      href: "/ui/MoLOS-AI-Knowledge#libraries",
     },
   ],
 };
 
-export const moduleConfig = tasksConfig;
-export default tasksConfig;
+export default moduleConfig;
