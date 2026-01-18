@@ -1,38 +1,246 @@
-/**
- * Task Types - Minimal sample.
- * Keep this file small and add fields only when your module needs them.
- */
-
-export const TaskStatus = {
-  TO_DO: "to_do",
-  DONE: "done",
+export const PromptCategory = {
+  WRITING: "Writing",
+  CODE_REVIEW: "Code Review",
+  ANALYSIS: "Analysis",
+  CUSTOMER_SUPPORT: "Customer Support",
+  DATA_PROCESSING: "Data Processing",
+  GENERAL: "General",
 } as const;
 
-export const TaskPriority = {
-  HIGH: "high",
+export const ModelTarget = {
+  GPT_4: "gpt-4",
+  GPT_4_TURBO: "gpt-4-turbo",
+  CLAUDE_SONNET: "claude-sonnet-4-5",
+  CLAUDE_HAIKU: "claude-haiku-4-5",
+  GEMINI_PRO: "gemini-pro",
+} as const;
+
+export const HumanizationLevel = {
+  LIGHT: "light",
   MEDIUM: "medium",
-  LOW: "low",
+  AGGRESSIVE: "aggressive",
 } as const;
 
-export interface Task {
+export const HumanizationTone = {
+  PROFESSIONAL: "professional",
+  CASUAL: "casual",
+  ACADEMIC: "academic",
+  CREATIVE: "creative",
+  CONVERSATIONAL: "conversational",
+} as const;
+
+export const HumanizerStatus = {
+  QUEUED: "queued",
+  COMPLETED: "completed",
+  FAILED: "failed",
+} as const;
+
+export const AbTestStatus = {
+  DRAFT: "draft",
+  RUNNING: "running",
+  COMPLETED: "completed",
+} as const;
+
+export const LibraryRole = {
+  VIEWER: "viewer",
+  EDITOR: "editor",
+  ADMIN: "admin",
+} as const;
+
+export interface Prompt {
   id: string;
   userId: string;
   title: string;
   description?: string;
-  // Status controls completion logic in the API and UI.
-  status: (typeof TaskStatus)[keyof typeof TaskStatus];
-  priority: (typeof TaskPriority)[keyof typeof TaskPriority];
-  dueDate?: number; // Unix seconds
-  isCompleted: boolean;
-  createdAt: number; // Unix seconds
-  updatedAt: number; // Unix seconds
+  content: string;
+  category: PromptCategory;
+  modelTarget: ModelTarget;
+  tags: string[];
+  isFavorite: boolean;
+  isPrivate: boolean;
+  isDeleted: boolean;
+  createdAt: number;
+  updatedAt: number;
 }
 
-export type TaskStatus = (typeof TaskStatus)[keyof typeof TaskStatus];
-export type TaskPriority = (typeof TaskPriority)[keyof typeof TaskPriority];
+export interface PromptVersion {
+  id: string;
+  promptId: string;
+  userId: string;
+  versionNumber: number;
+  content: string;
+  commitMessage?: string;
+  diffSummary?: string;
+  createdAt: number;
+}
 
-export type CreateTaskInput = Omit<
-  Task,
-  "id" | "userId" | "createdAt" | "updatedAt" | "isCompleted"
+export interface LlmFile {
+  id: string;
+  userId: string;
+  title: string;
+  filename: string;
+  currentVersion: number;
+  isDeleted: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface LlmFileVersion {
+  id: string;
+  llmFileId: string;
+  userId: string;
+  versionNumber: number;
+  content: string;
+  label?: string;
+  commitMessage?: string;
+  schemaValid: boolean;
+  createdAt: number;
+}
+
+export interface PlaygroundSession {
+  id: string;
+  userId: string;
+  promptId?: string;
+  model: ModelTarget;
+  settingsJson: string;
+  messagesJson: string;
+  totalTokens: number;
+  totalCost: number;
+  latencyMs?: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface HumanizerJob {
+  id: string;
+  userId: string;
+  inputText: string;
+  outputText?: string;
+  level: HumanizationLevel;
+  tone: HumanizationTone;
+  confidenceScore: number;
+  status: HumanizerStatus;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface PromptChain {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  definitionJson: string;
+  tags: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface AbTest {
+  id: string;
+  userId: string;
+  name: string;
+  promptIdsJson: string;
+  datasetJson: string;
+  resultsJson: string;
+  status: AbTestStatus;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface UsageAnalytic {
+  id: string;
+  userId: string;
+  entityType: string;
+  entityId?: string;
+  metricType: string;
+  value: number;
+  metadataJson: string;
+  createdAt: number;
+}
+
+export interface SharedLibrary {
+  id: string;
+  ownerUserId: string;
+  name: string;
+  description?: string;
+  isPrivate: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface SharedLibraryMember {
+  id: string;
+  libraryId: string;
+  userId: string;
+  role: LibraryRole;
+  createdAt: number;
+}
+
+export interface SharedLibraryPrompt {
+  id: string;
+  libraryId: string;
+  promptId: string;
+  createdAt: number;
+}
+
+export interface PromptDeployment {
+  id: string;
+  promptId: string;
+  userId: string;
+  versionNumber: number;
+  environmentLabel: string;
+  createdAt: number;
+}
+
+export type PromptCategory = (typeof PromptCategory)[keyof typeof PromptCategory];
+export type ModelTarget = (typeof ModelTarget)[keyof typeof ModelTarget];
+export type HumanizationLevel =
+  (typeof HumanizationLevel)[keyof typeof HumanizationLevel];
+export type HumanizationTone =
+  (typeof HumanizationTone)[keyof typeof HumanizationTone];
+export type HumanizerStatus =
+  (typeof HumanizerStatus)[keyof typeof HumanizerStatus];
+export type AbTestStatus = (typeof AbTestStatus)[keyof typeof AbTestStatus];
+export type LibraryRole = (typeof LibraryRole)[keyof typeof LibraryRole];
+
+export type CreatePromptInput = Omit<
+  Prompt,
+  "id" | "userId" | "createdAt" | "updatedAt" | "isDeleted"
+> & { commitMessage?: string };
+export type UpdatePromptInput = Partial<
+  Omit<Prompt, "id" | "userId" | "createdAt" | "updatedAt">
+> & { commitMessage?: string };
+
+export type CreateLlmFileInput = Omit<
+  LlmFile,
+  "id" | "userId" | "currentVersion" | "createdAt" | "updatedAt" | "isDeleted"
+> & { content: string; label?: string; commitMessage?: string };
+export type UpdateLlmFileInput = Partial<
+  Omit<LlmFile, "id" | "userId" | "currentVersion" | "createdAt" | "updatedAt">
+> & { content?: string; label?: string; commitMessage?: string };
+
+export type CreateHumanizerJobInput = Omit<
+  HumanizerJob,
+  "id" | "userId" | "createdAt" | "updatedAt" | "status"
 >;
-export type UpdateTaskInput = Partial<CreateTaskInput>;
+
+export type CreatePromptChainInput = Omit<
+  PromptChain,
+  "id" | "userId" | "createdAt" | "updatedAt"
+>;
+export type UpdatePromptChainInput = Partial<
+  Omit<PromptChain, "id" | "userId" | "createdAt" | "updatedAt">
+>;
+
+export type CreateAbTestInput = Omit<
+  AbTest,
+  "id" | "userId" | "createdAt" | "updatedAt"
+>;
+export type UpdateAbTestInput = Partial<
+  Omit<AbTest, "id" | "userId" | "createdAt" | "updatedAt">
+>;
+
+export type CreateSharedLibraryInput = Omit<
+  SharedLibrary,
+  "id" | "ownerUserId" | "createdAt" | "updatedAt"
+>;
