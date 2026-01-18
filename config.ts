@@ -4,7 +4,6 @@ import {
   MessageSquareText,
   Wand2,
   Files,
-  Share2,
   Workflow,
   BarChart3,
 } from "lucide-svelte";
@@ -51,11 +50,6 @@ export const moduleConfig: ModuleConfig = {
       name: "A/B Tests",
       icon: BarChart3,
       href: "/ui/MoLOS-AI-Knowledge/ab-tests",
-    },
-    {
-      name: "Libraries",
-      icon: Share2,
-      href: "/ui/MoLOS-AI-Knowledge/libraries",
     },
     {
       name: "Analytics",

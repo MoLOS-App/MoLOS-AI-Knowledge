@@ -1,28 +1,36 @@
 <script lang="ts">
 	import { goto, invalidate } from '$app/navigation';
+	import { page } from '$app/stores';
 	import {
 		createPrompt,
 		updatePrompt,
-		deletePrompt
+		deletePrompt,
+		createSharedLibrary
 	} from '$lib/stores/external_modules/MoLOS-AI-Knowledge/api';
 	import {
 		ModelTarget,
 		PromptCategory,
 		type Prompt
 	} from '$lib/models/external_modules/MoLOS-AI-Knowledge';
+	import {
+		Dialog,
+		DialogContent,
+		DialogDescription,
+		DialogFooter,
+		DialogHeader,
+		DialogTitle
+	} from '$lib/components/ui/dialog';
 
 	export let data;
 
-	let prompts = [];
+	let prompts: Prompt[] = [];
 	let promptVersions = [];
+	let libraries = [];
+	let libraryPromptIds: string[] = [];
 	let selectedPromptId: string | null = null;
-	let filteredPrompts = [];
+	let selectedLibraryId: string | null = null;
 
 	let search = '';
-	let categoryFilter = 'all';
-	let modelFilter = 'all';
-	let tagFilter = '';
-	let favoritesOnly = false;
 
 	let activePromptId: string | null = null;
 	let lastSelectedId: string | null = null;
@@ -37,31 +45,42 @@
 	let promptPrivate = false;
 	let promptCommit = '';
 
+	let promptModalOpen = false;
+	let promptModalWasOpen = false;
+
+	let libraryModalOpen = false;
+	let libraryModalWasOpen = false;
+	let libraryName = '';
+	let libraryDescription = '';
+	let libraryPrivate = true;
+
 	const categoryOptions = Object.values(PromptCategory);
 	const modelOptions = Object.values(ModelTarget);
+	const cardThemes = [
+		'bg-emerald-50/70 border-emerald-100',
+		'bg-sky-50/70 border-sky-100',
+		'bg-amber-50/70 border-amber-100',
+		'bg-rose-50/70 border-rose-100',
+		'bg-violet-50/70 border-violet-100',
+		'bg-lime-50/70 border-lime-100'
+	];
 
-	$: ({ prompts, promptVersions, selectedPromptId } = data);
+	$: ({ prompts, promptVersions, libraries, libraryPromptIds, selectedPromptId, selectedLibraryId } = data);
 
-	$: filteredPrompts = prompts
-		.filter((prompt: Prompt) =>
-			prompt.title.toLowerCase().includes(search.toLowerCase())
-		)
-		.filter((prompt: Prompt) =>
-			categoryFilter === 'all' ? true : prompt.category === categoryFilter
-		)
-		.filter((prompt: Prompt) =>
-			modelFilter === 'all' ? true : prompt.modelTarget === modelFilter
-		)
-		.filter((prompt: Prompt) =>
-			favoritesOnly ? prompt.isFavorite : true
-		)
-		.filter((prompt: Prompt) => {
-			if (!tagFilter.trim()) return true;
-			return prompt.tags.some((tag) => tag.toLowerCase().includes(tagFilter.toLowerCase()));
+	const updateQueryParams = (updates: Record<string, string | null>) => {
+		const params = new URLSearchParams($page.url.searchParams);
+		Object.entries(updates).forEach(([key, value]) => {
+			if (!value) params.delete(key);
+			else params.set(key, value);
 		});
+		const query = params.toString();
+		goto(query ? `${$page.url.pathname}?${query}` : $page.url.pathname, {
+			replaceState: true
+		});
+	};
 
 	$: if (selectedPromptId && selectedPromptId !== lastSelectedId) {
-		const selected = prompts.find((prompt: Prompt) => prompt.id === selectedPromptId);
+		const selected = prompts.find((prompt) => prompt.id === selectedPromptId);
 		if (selected) {
 			activePromptId = selected.id;
 			promptTitle = selected.title;
@@ -73,11 +92,31 @@
 			promptFavorite = selected.isFavorite;
 			promptPrivate = selected.isPrivate;
 			promptCommit = '';
+			promptModalOpen = true;
 			lastSelectedId = selectedPromptId;
 		}
 	}
 
-	const resetForm = () => {
+	$: if (!promptModalOpen && promptModalWasOpen) {
+		resetPromptForm();
+		updateQueryParams({ promptId: null });
+	}
+
+	$: promptModalWasOpen = promptModalOpen;
+
+	$: if (!libraryModalOpen && libraryModalWasOpen) {
+		resetLibraryForm();
+	}
+
+	$: libraryModalWasOpen = libraryModalOpen;
+
+	$: visiblePrompts = prompts
+		.filter((prompt) =>
+			selectedLibraryId ? libraryPromptIds.includes(prompt.id) : true
+		)
+		.filter((prompt) => prompt.title.toLowerCase().includes(search.toLowerCase()));
+
+	const resetPromptForm = () => {
 		activePromptId = null;
 		promptTitle = '';
 		promptDescription = '';
@@ -89,11 +128,37 @@
 		promptPrivate = false;
 		promptCommit = '';
 		lastSelectedId = null;
-		goto('/ui/MoLOS-AI-Knowledge/prompts', { replaceState: true });
 	};
 
-	const selectPrompt = (prompt: Prompt) => {
-		goto(`/ui/MoLOS-AI-Knowledge/prompts?promptId=${prompt.id}`);
+	const resetLibraryForm = () => {
+		libraryName = '';
+		libraryDescription = '';
+		libraryPrivate = true;
+	};
+
+	const openNewPrompt = () => {
+		resetPromptForm();
+		promptModalOpen = true;
+		updateQueryParams({ promptId: null });
+	};
+
+	const openEditPrompt = (prompt: Prompt) => {
+		activePromptId = prompt.id;
+		promptTitle = prompt.title;
+		promptDescription = prompt.description ?? '';
+		promptContent = prompt.content;
+		promptTags = prompt.tags.join(', ');
+		promptCategory = prompt.category;
+		promptModel = prompt.modelTarget;
+		promptFavorite = prompt.isFavorite;
+		promptPrivate = prompt.isPrivate;
+		promptCommit = '';
+		promptModalOpen = true;
+		updateQueryParams({ promptId: prompt.id });
+	};
+
+	const selectLibrary = (libraryId: string | null) => {
+		updateQueryParams({ libraryId, promptId: null });
 	};
 
 	const savePrompt = async () => {
@@ -123,169 +188,265 @@
 		}
 
 		await invalidate();
-		resetForm();
+		promptModalOpen = false;
 	};
 
 	const removePrompt = async (promptId: string) => {
 		await deletePrompt(promptId);
 		await invalidate();
-		if (activePromptId === promptId) resetForm();
+	};
+
+	const saveLibrary = async () => {
+		if (!libraryName.trim()) return;
+		await createSharedLibrary({
+			name: libraryName.trim(),
+			description: libraryDescription.trim() || undefined,
+			isPrivate: libraryPrivate
+		});
+		await invalidate();
+		libraryModalOpen = false;
 	};
 </script>
 
 <div class="space-y-6">
-	<section class="rounded-2xl border bg-card p-6">
-		<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-			<div>
-				<h2 class="text-2xl font-semibold tracking-tight">Prompts</h2>
-				<p class="text-sm text-muted-foreground">
-					Manage prompt templates, versions, and favorites.
-				</p>
+	<section class="rounded-[28px] border bg-card/80 p-6 shadow-sm">
+		<div class="flex flex-col gap-5">
+			<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+				<div>
+					<h2 class="text-2xl font-semibold tracking-tight">Prompt Library</h2>
+					<p class="text-sm text-muted-foreground">
+						Curate prompts and collections for every workflow.
+					</p>
+				</div>
+				<div class="flex flex-wrap gap-2">
+					<button
+						class="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background"
+						onclick={openNewPrompt}
+					>
+						Add prompt
+					</button>
+					<button
+						class="rounded-full border px-4 py-2 text-xs font-semibold text-foreground"
+						onclick={() => (libraryModalOpen = true)}
+					>
+						Add library
+					</button>
+				</div>
 			</div>
-			<div class="grid w-full gap-2 text-xs sm:grid-cols-2 lg:flex lg:w-auto">
-				<input
-					class="h-9 w-full rounded-md border bg-background px-3 sm:w-48"
-					bind:value={search}
-					placeholder="Search prompts"
-				/>
-				<select class="h-9 w-full rounded-md border bg-background px-2 sm:w-auto" bind:value={categoryFilter}>
-					<option value="all">All categories</option>
-					{#each categoryOptions as option}
-						<option value={option}>{option}</option>
-					{/each}
-				</select>
-				<select class="h-9 w-full rounded-md border bg-background px-2 sm:w-auto" bind:value={modelFilter}>
-					<option value="all">All models</option>
-					{#each modelOptions as option}
-						<option value={option}>{option}</option>
-					{/each}
-				</select>
-				<input
-					class="h-9 w-full rounded-md border bg-background px-3 sm:w-36"
-					bind:value={tagFilter}
-					placeholder="Tag"
-				/>
-				<label class="flex h-9 items-center gap-2 rounded-md border px-2">
-					<input type="checkbox" bind:checked={favoritesOnly} /> Favorites
-				</label>
-			</div>
-		</div>
-	</section>
 
-	<section class="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
-		<div class="rounded-2xl border bg-card p-6">
-			<div class="space-y-3">
-				{#each filteredPrompts as prompt (prompt.id)}
-					<div class="rounded-xl border p-4">
-						<div class="flex items-center justify-between">
-							<div>
-								<div class="text-sm font-semibold">{prompt.title}</div>
-								<div class="text-xs text-muted-foreground">
-									{prompt.category} • {prompt.modelTarget}
-								</div>
-							</div>
-							<div class="flex gap-2 text-xs">
-								<button
-									class="rounded-md border px-3 py-1"
-									onclick={() => selectPrompt(prompt)}
-								>
-									Edit
-								</button>
-								<button
-									class="rounded-md border px-3 py-1"
-									onclick={() => removePrompt(prompt.id)}
-								>
-									Delete
-								</button>
-							</div>
-						</div>
-						<p class="mt-2 text-xs text-muted-foreground">
-							{prompt.description || prompt.content}
-						</p>
-						<div class="mt-2 text-xs text-muted-foreground">
-							Tags: {prompt.tags.join(', ') || 'None'}
-						</div>
-					</div>
+			<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+				<div class="w-full md:max-w-xs">
+					<input
+						class="h-10 w-full rounded-full border bg-background px-4 text-sm"
+						placeholder="Search prompts"
+						bind:value={search}
+					/>
+				</div>
+				<div class="text-xs text-muted-foreground">
+					{visiblePrompts.length} prompt{visiblePrompts.length === 1 ? '' : 's'}
+				</div>
+			</div>
+
+			<div class="flex gap-3 overflow-x-auto pb-2">
+				<button
+					class={`flex min-w-[140px] flex-col rounded-2xl border px-4 py-3 text-left text-xs transition ${
+						!selectedLibraryId
+							? 'border-foreground bg-foreground text-background'
+							: 'border-border bg-background text-foreground hover:bg-muted/40'
+					}`}
+					onclick={() => selectLibrary(null)}
+				>
+					<span class="text-[10px] uppercase text-muted-foreground">All</span>
+					<span class="text-sm font-semibold">All prompts</span>
+				</button>
+				{#each libraries as library}
+					<button
+						class={`flex min-w-[180px] flex-col rounded-2xl border px-4 py-3 text-left text-xs transition ${
+							selectedLibraryId === library.id
+								? 'border-foreground bg-foreground text-background'
+								: 'border-border bg-background text-foreground hover:bg-muted/40'
+						}`}
+						onclick={() => selectLibrary(library.id)}
+					>
+						<span class="text-[10px] uppercase text-muted-foreground">
+							{library.isPrivate ? 'Private' : 'Shared'}
+						</span>
+						<span class="text-sm font-semibold">{library.name}</span>
+						{#if library.description}
+							<span class="text-xs text-muted-foreground">{library.description}</span>
+						{/if}
+					</button>
 				{/each}
-				{#if filteredPrompts.length === 0}
-					<div class="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-						No prompts found. Adjust your filters or create a new prompt.
+				{#if libraries.length === 0}
+					<div class="rounded-2xl border border-dashed px-4 py-3 text-xs text-muted-foreground">
+						No libraries yet. Create one to group prompts.
 					</div>
 				{/if}
 			</div>
 		</div>
-		<div class="rounded-2xl border bg-card p-6">
-			<h3 class="text-lg font-semibold">{activePromptId ? 'Edit Prompt' : 'New Prompt'}</h3>
-			<div class="mt-4 grid gap-4">
-				<input
-					class="h-10 rounded-md border bg-background px-3 text-sm"
-					bind:value={promptTitle}
-					placeholder="Prompt title"
-				/>
-				<textarea
-					class="min-h-[120px] rounded-md border bg-background p-3 text-sm"
-					bind:value={promptContent}
-					placeholder="Prompt content"
-				></textarea>
-				<textarea
-					class="min-h-[80px] rounded-md border bg-background p-3 text-sm"
-					bind:value={promptDescription}
-					placeholder="Description"
-				></textarea>
-				<div class="grid gap-3 md:grid-cols-2">
-					<select class="h-10 rounded-md border bg-background px-3 text-sm" bind:value={promptCategory}>
-						{#each categoryOptions as option}
-							<option value={option}>{option}</option>
+	</section>
+
+	<section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+		{#each visiblePrompts as prompt, index (prompt.id)}
+			<article class={`rounded-2xl border p-4 shadow-sm ${cardThemes[index % cardThemes.length]}`}>
+				<div class="flex items-start justify-between gap-3">
+					<div>
+						<div class="text-sm font-semibold">{prompt.title}</div>
+						<div class="text-xs text-muted-foreground">
+							{prompt.category} • {prompt.modelTarget}
+						</div>
+					</div>
+					<div class="flex gap-2 text-[11px]">
+						<button
+							class="rounded-full border px-3 py-1"
+							onclick={() => openEditPrompt(prompt)}
+						>
+							Edit
+						</button>
+						<button
+							class="rounded-full border px-3 py-1"
+							onclick={() => removePrompt(prompt.id)}
+						>
+							Delete
+						</button>
+					</div>
+				</div>
+				<p class="mt-3 text-xs text-muted-foreground">
+					{prompt.description || prompt.content}
+				</p>
+				{#if prompt.tags.length}
+					<div class="mt-4 flex flex-wrap gap-2">
+						{#each prompt.tags as tag}
+							<span class="rounded-full bg-background/70 px-2.5 py-1 text-[10px] font-semibold uppercase">
+								{tag}
+							</span>
 						{/each}
-					</select>
-					<select class="h-10 rounded-md border bg-background px-3 text-sm" bind:value={promptModel}>
-						{#each modelOptions as option}
-							<option value={option}>{option}</option>
-						{/each}
-					</select>
-				</div>
-				<input
-					class="h-10 rounded-md border bg-background px-3 text-sm"
-					bind:value={promptTags}
-					placeholder="Tags (comma separated)"
-				/>
-				<input
-					class="h-10 rounded-md border bg-background px-3 text-sm"
-					bind:value={promptCommit}
-					placeholder="Commit message (optional)"
-				/>
-				<div class="flex flex-wrap gap-4 text-sm">
-					<label class="flex items-center gap-2">
-						<input type="checkbox" bind:checked={promptFavorite} /> Favorite
-					</label>
-					<label class="flex items-center gap-2">
-						<input type="checkbox" bind:checked={promptPrivate} /> Private
-					</label>
-				</div>
-				<div class="flex gap-3">
-					<button
-						class="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground"
-						onclick={savePrompt}
-					>
-						{activePromptId ? 'Save changes' : 'Create prompt'}
-					</button>
-					<button class="rounded-md border px-4 py-2 text-sm" onclick={resetForm}>
-						Reset
-					</button>
-				</div>
+					</div>
+				{/if}
+			</article>
+		{/each}
+		{#if visiblePrompts.length === 0}
+			<div class="rounded-2xl border border-dashed p-8 text-sm text-muted-foreground">
+				No prompts match this view yet.
 			</div>
-			{#if promptVersions.length}
-				<div class="mt-6">
-					<h4 class="text-sm font-semibold">Version History</h4>
-					<ul class="mt-2 space-y-2 text-xs text-muted-foreground">
-						{#each promptVersions as version}
-							<li class="rounded-md border px-3 py-2">
-								v{version.versionNumber} • {version.commitMessage || 'No message'}
-							</li>
-						{/each}
-					</ul>
-				</div>
-			{/if}
-		</div>
+		{/if}
 	</section>
 </div>
+
+<Dialog bind:open={promptModalOpen}>
+	<DialogContent class="max-w-2xl rounded-3xl">
+		<DialogHeader>
+			<DialogTitle class="text-2xl font-semibold">
+				{activePromptId ? 'Edit prompt' : 'New prompt'}
+			</DialogTitle>
+			<DialogDescription>
+				Capture a clean prompt and keep versions tracked.
+			</DialogDescription>
+		</DialogHeader>
+		<div class="mt-6 grid gap-4">
+			<input
+				class="h-10 rounded-md border bg-background px-3 text-sm"
+				bind:value={promptTitle}
+				placeholder="Prompt title"
+			/>
+			<textarea
+				class="min-h-[140px] rounded-md border bg-background p-3 text-sm"
+				bind:value={promptContent}
+				placeholder="Prompt content"
+			></textarea>
+			<textarea
+				class="min-h-[90px] rounded-md border bg-background p-3 text-sm"
+				bind:value={promptDescription}
+				placeholder="Description"
+			></textarea>
+			<div class="grid gap-3 md:grid-cols-2">
+				<select class="h-10 rounded-md border bg-background px-3 text-sm" bind:value={promptCategory}>
+					{#each categoryOptions as option}
+						<option value={option}>{option}</option>
+					{/each}
+				</select>
+				<select class="h-10 rounded-md border bg-background px-3 text-sm" bind:value={promptModel}>
+					{#each modelOptions as option}
+						<option value={option}>{option}</option>
+					{/each}
+				</select>
+			</div>
+			<input
+				class="h-10 rounded-md border bg-background px-3 text-sm"
+				bind:value={promptTags}
+				placeholder="Tags (comma separated)"
+			/>
+			<input
+				class="h-10 rounded-md border bg-background px-3 text-sm"
+				bind:value={promptCommit}
+				placeholder="Commit message (optional)"
+			/>
+			<div class="flex flex-wrap gap-4 text-sm">
+				<label class="flex items-center gap-2">
+					<input type="checkbox" bind:checked={promptFavorite} /> Favorite
+				</label>
+				<label class="flex items-center gap-2">
+					<input type="checkbox" bind:checked={promptPrivate} /> Private
+				</label>
+			</div>
+		</div>
+		{#if promptVersions.length}
+			<div class="mt-6">
+				<h4 class="text-sm font-semibold">Version history</h4>
+				<ul class="mt-2 space-y-2 text-xs text-muted-foreground">
+					{#each promptVersions as version}
+						<li class="rounded-md border px-3 py-2">
+							v{version.versionNumber} • {version.commitMessage || 'No message'}
+						</li>
+					{/each}
+				</ul>
+			</div>
+		{/if}
+		<DialogFooter class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+			<button class="rounded-full border px-4 py-2 text-sm" onclick={() => (promptModalOpen = false)}>
+				Cancel
+			</button>
+			<button
+				class="rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background"
+				onclick={savePrompt}
+			>
+				{activePromptId ? 'Save changes' : 'Create prompt'}
+			</button>
+		</DialogFooter>
+	</DialogContent>
+</Dialog>
+
+<Dialog bind:open={libraryModalOpen}>
+	<DialogContent class="max-w-xl rounded-3xl">
+		<DialogHeader>
+			<DialogTitle class="text-2xl font-semibold">New library</DialogTitle>
+			<DialogDescription>Group prompts into shared collections.</DialogDescription>
+		</DialogHeader>
+		<div class="mt-6 grid gap-4">
+			<input
+				class="h-10 rounded-md border bg-background px-3 text-sm"
+				bind:value={libraryName}
+				placeholder="Library name"
+			/>
+			<input
+				class="h-10 rounded-md border bg-background px-3 text-sm"
+				bind:value={libraryDescription}
+				placeholder="Description"
+			/>
+			<label class="flex items-center gap-2 text-sm">
+				<input type="checkbox" bind:checked={libraryPrivate} /> Private
+			</label>
+		</div>
+		<DialogFooter class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+			<button class="rounded-full border px-4 py-2 text-sm" onclick={() => (libraryModalOpen = false)}>
+				Cancel
+			</button>
+			<button
+				class="rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background"
+				onclick={saveLibrary}
+			>
+				Create library
+			</button>
+		</DialogFooter>
+	</DialogContent>
+</Dialog>
