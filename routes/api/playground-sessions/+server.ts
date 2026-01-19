@@ -14,6 +14,17 @@ const CreateSchema = z.object({
   latencyMs: z.number().optional(),
 });
 
+const UpdateSchema = z.object({
+  id: z.string().min(1),
+  promptId: z.string().optional(),
+  model: z.string().min(1).optional(),
+  settings: z.record(z.string(), z.unknown()).optional(),
+  messages: z.array(z.unknown()).optional(),
+  totalTokens: z.number().min(0).optional(),
+  totalCost: z.number().min(0).optional(),
+  latencyMs: z.number().optional(),
+});
+
 export const GET: RequestHandler = async ({ locals }) => {
   const userId = locals.user?.id;
   if (!userId) throw error(401, "Unauthorized");
@@ -31,4 +42,16 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   const repo = new PlaygroundSessionRepository(db);
   const session = await repo.create(userId, payload);
   return json(session, { status: 201 });
+};
+
+export const PUT: RequestHandler = async ({ locals, request }) => {
+  const userId = locals.user?.id;
+  if (!userId) throw error(401, "Unauthorized");
+
+  const payload = UpdateSchema.parse(await request.json());
+  const { id, ...updates } = payload;
+  const repo = new PlaygroundSessionRepository(db);
+  const session = await repo.update(userId, id, updates);
+  if (!session) throw error(404, "Playground session not found");
+  return json(session);
 };

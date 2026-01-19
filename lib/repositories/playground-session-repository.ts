@@ -14,6 +14,8 @@ export type PlaygroundSessionInput = {
   latencyMs?: number;
 };
 
+export type PlaygroundSessionUpdate = Partial<PlaygroundSessionInput>;
+
 export class PlaygroundSessionRepository extends BaseRepository {
   private mapSession(row: typeof playgroundSessions.$inferSelect): PlaygroundSession {
     return {
@@ -51,5 +53,30 @@ export class PlaygroundSessionRepository extends BaseRepository {
       .returning();
 
     return this.mapSession(result[0]);
+  }
+
+  async update(
+    userId: string,
+    sessionId: string,
+    data: PlaygroundSessionUpdate,
+  ): Promise<PlaygroundSession | null> {
+    const [result] = await this.db
+      .update(playgroundSessions)
+      .set({
+        promptId: data.promptId,
+        model: data.model,
+        settingsJson:
+          data.settings !== undefined ? toJsonString(data.settings, "{}") : undefined,
+        messagesJson:
+          data.messages !== undefined ? toJsonString(data.messages, "[]") : undefined,
+        totalTokens: data.totalTokens,
+        totalCost: data.totalCost,
+        latencyMs: data.latencyMs,
+        updatedAt: Math.floor(Date.now() / 1000),
+      })
+      .where(and(eq(playgroundSessions.id, sessionId), eq(playgroundSessions.userId, userId)))
+      .returning();
+
+    return result ? this.mapSession(result) : null;
   }
 }

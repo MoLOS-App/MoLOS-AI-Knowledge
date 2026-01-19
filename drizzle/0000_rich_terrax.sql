@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_ab_tests` (
+CREATE TABLE IF NOT EXISTS IF NOT EXISTS `MoLOS-AI-Knowledge_ab_tests` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`name` text NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_ab_tests` (
 
 --> statement-breakpoint
 
-CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_ai_provider_settings` (
+CREATE TABLE IF NOT EXISTS IF NOT EXISTS `MoLOS-AI-Knowledge_ai_provider_settings` (
 	`user_id` text PRIMARY KEY NOT NULL,
 	`provider` text CHECK(provider IN ('openai', 'anthropic', 'openrouter', 'xai')) DEFAULT 'openai' NOT NULL,
 	`api_token` text DEFAULT '' NOT NULL,
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_ai_provider_settings` (
 
 --> statement-breakpoint
 
-CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_humanizer_jobs` (
+CREATE TABLE IF NOT EXISTS IF NOT EXISTS `MoLOS-AI-Knowledge_humanizer_jobs` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`input_text` text NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_humanizer_jobs` (
 
 --> statement-breakpoint
 
-CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_llm_file_versions` (
+CREATE TABLE IF NOT EXISTS IF NOT EXISTS `MoLOS-AI-Knowledge_llm_file_versions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`llm_file_id` text NOT NULL,
 	`user_id` text NOT NULL,
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_llm_file_versions` (
 
 --> statement-breakpoint
 
-CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_llm_files` (
+CREATE TABLE IF NOT EXISTS IF NOT EXISTS `MoLOS-AI-Knowledge_llm_files` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`title` text NOT NULL,
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_llm_files` (
 
 --> statement-breakpoint
 
-CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_playground_sessions` (
+CREATE TABLE IF NOT EXISTS IF NOT EXISTS `MoLOS-AI-Knowledge_playground_sessions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`prompt_id` text,
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_playground_sessions` (
 
 --> statement-breakpoint
 
-CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_prompt_chains` (
+CREATE TABLE IF NOT EXISTS IF NOT EXISTS `MoLOS-AI-Knowledge_prompt_chains` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`name` text NOT NULL,
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_prompt_chains` (
 
 --> statement-breakpoint
 
-CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_prompt_deployments` (
+CREATE TABLE IF NOT EXISTS IF NOT EXISTS `MoLOS-AI-Knowledge_prompt_deployments` (
 	`id` text PRIMARY KEY NOT NULL,
 	`prompt_id` text NOT NULL,
 	`user_id` text NOT NULL,
@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_prompt_deployments` (
 
 --> statement-breakpoint
 
-CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_prompt_versions` (
+CREATE TABLE IF NOT EXISTS IF NOT EXISTS `MoLOS-AI-Knowledge_prompt_versions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`prompt_id` text NOT NULL,
 	`user_id` text NOT NULL,
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_prompt_versions` (
 
 --> statement-breakpoint
 
-CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_prompts` (
+CREATE TABLE IF NOT EXISTS IF NOT EXISTS `MoLOS-AI-Knowledge_prompts` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`title` text NOT NULL,
@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_prompts` (
 
 --> statement-breakpoint
 
-CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_usage_analytics` (
+CREATE TABLE IF NOT EXISTS IF NOT EXISTS `MoLOS-AI-Knowledge_usage_analytics` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`entity_type` text NOT NULL,

@@ -143,6 +143,28 @@ export async function createPlaygroundSession(
   );
 }
 
+export async function updatePlaygroundSession(
+  id: string,
+  data: Partial<Omit<PlaygroundSession, "id" | "userId" | "createdAt" | "updatedAt">>,
+): Promise<PlaygroundSession> {
+  return handle(
+    await fetch(`${base}/playground-sessions`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id,
+        promptId: data.promptId,
+        model: data.model,
+        settings: data.settingsJson ? JSON.parse(data.settingsJson) : undefined,
+        messages: data.messagesJson ? JSON.parse(data.messagesJson) : undefined,
+        totalTokens: data.totalTokens,
+        totalCost: data.totalCost,
+        latencyMs: data.latencyMs,
+      }),
+    }),
+  );
+}
+
 export async function fetchAiProviderSettings(): Promise<AiProviderSettings> {
   return handle(await fetch(`${base}/settings`));
 }

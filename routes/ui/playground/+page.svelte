@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Send , Plus} from 'lucide-svelte';
-	import { invalidateAll } from '$app/navigation';
+	import { toast } from 'svelte-sonner';
 	import {
 		createPlaygroundSession,
-		fetchProviderModels
+		fetchProviderModels,
+		updatePlaygroundSession
 	} from '$lib/stores/external_modules/MoLOS-AI-Knowledge/api';
+	import { sessionsStore } from '$lib/stores/external_modules/MoLOS-AI-Knowledge/ai-knowledge.store';
 	import {
-		ModelTarget,
 		type PlaygroundSession,
 		type Prompt
 	} from '$lib/models/external_modules/MoLOS-AI-Knowledge';
@@ -17,12 +18,14 @@
 
 	let prompts: Prompt[] = [];
 	let sessions: PlaygroundSession[] = [];
+	let initialSessions: PlaygroundSession[] = [];
 	let models: string[] = [];
 	let settings: PageData['settings'] = null;
 	let provider = 'openai';
 
-	$: ({ prompts, sessions, models, settings } = data);
+	$: ({ prompts, sessions: initialSessions, models, settings } = data);
 	$: provider = settings?.provider ?? 'openai';
+	$: sessions = $sessionsStore;
 
 	const providerLabels: Record<string, string> = {
 		openai: 'OpenAI',
@@ -30,11 +33,12 @@
 		anthropic: 'Anthropic',
 		xai: 'xAI'
 	};
+	const sendGuardToastId = 'ai-knowledge-playground-send-guard';
 
 	let modelOptions: string[] = [];
 
 	let playgroundPromptId = '';
-	let playgroundModel = ModelTarget.GPT_4;
+	let playgroundModel = 'gpt-4';
 	let selectedModelId = 'custom';
 	let customModelId = '';
 	let playgroundTemp = 0.7;
@@ -47,6 +51,8 @@
 	let playgroundLatency: number | null = null;
 	let playgroundCost = 0;
 	let playgroundTokenEstimate = 0;
+	let playgroundError = '';
+	let isSending = false;
 	let selectedSessionId = '';
 	let selectedSession: PlaygroundSession | null = null;
 	let deletedSessionIds = new Set<string>();
@@ -55,19 +61,31 @@
 	let renameDraft = '';
 	let visibleSessions: PlaygroundSession[] = [];
 
+	const defaultModels = [
+		'gpt-4',
+		'gpt-4-turbo',
+		'claude-sonnet-4-5',
+		'claude-haiku-4-5',
+		'gemini-pro'
+	];
 	const pricing: Record<string, { input: number; output: number }> = {
-		[ModelTarget.GPT_4]: { input: 0.03, output: 0.06 },
-		[ModelTarget.GPT_4_TURBO]: { input: 0.01, output: 0.03 },
-		[ModelTarget.CLAUDE_SONNET]: { input: 0.008, output: 0.024 },
-		[ModelTarget.CLAUDE_HAIKU]: { input: 0.002, output: 0.006 },
-		[ModelTarget.GEMINI_PRO]: { input: 0.0025, output: 0.005 }
+		'gpt-4': { input: 0.03, output: 0.06 },
+		'gpt-4-turbo': { input: 0.01, output: 0.03 },
+		'claude-sonnet-4-5': { input: 0.008, output: 0.024 },
+		'claude-haiku-4-5': { input: 0.002, output: 0.006 },
+		'gemini-pro': { input: 0.0025, output: 0.005 }
 	};
+	const allowedModelTargets = new Set(defaultModels);
+	const normalizeModelForStorage = (model: string) =>
+		allowedModelTargets.has(model) ? model : 'gpt-4';
 
 	const estimateTokens = (text: string) => Math.ceil(text.split(/\s+/).length / 0.75);
+	const estimateConversationTokens = (messages: { content: string }[]) =>
+		estimateTokens(messages.map((message) => message.content).join(' '));
 
 	$: {
 		const preconfigured = settings?.preconfiguredModels ?? [];
-		modelOptions = preconfigured.length ? preconfigured : models.length ? models : Object.values(ModelTarget);
+		modelOptions = preconfigured.length ? preconfigured : models.length ? models : defaultModels;
 	}
 
 	$: {
@@ -77,7 +95,7 @@
 	}
 
 	$: {
-		const fallbackModel = modelOptions[0] ?? ModelTarget.GPT_4;
+		const fallbackModel = modelOptions[0] ?? 'gpt-4';
 		playgroundModel =
 			selectedModelId === 'custom' ? customModelId.trim() || fallbackModel : selectedModelId;
 	}
@@ -88,39 +106,151 @@
 		? visibleSessions.find((session) => session.id === selectedSessionId) ?? null
 		: null;
 
+	$: requiresPrompt = prompts.length > 0;
+	$: canSendMessage =
+		!!provider &&
+		!!playgroundModel &&
+		(!requiresPrompt || !!playgroundPromptId) &&
+		!!playgroundMessage.trim() &&
+		!isSending;
+
 	onMount(async () => {
+		if (sessions.length === 0) {
+			sessionsStore.set(initialSessions ?? []);
+		}
 		try {
 			const result = await fetchProviderModels(provider);
 			models = result.models;
 		} catch {
-			models = models.length ? models : Object.values(ModelTarget);
+			models = models.length ? models : defaultModels;
 		}
 	});
 
-	const updateCostEstimate = () => {
-		const tokens = estimateTokens(playgroundMessage);
+	const updateCostEstimate = (text = playgroundMessage) => {
+		const tokens = estimateTokens(text);
 		playgroundTokenEstimate = tokens;
-		const rate = pricing[playgroundModel] ?? pricing[ModelTarget.GPT_4];
+		const rate = pricing[playgroundModel] ?? pricing['gpt-4'];
 		const inputCost = (tokens / 1000) * rate.input;
 		const outputCost = (playgroundTokens / 1000) * rate.output;
 		playgroundCost = Number((inputCost + outputCost).toFixed(4));
 	};
 
-	const sendPlaygroundMessage = () => {
-		if (!playgroundMessage.trim()) return;
+	const updateTotalsFromUsage = (
+		usage: { inputTokens?: number; outputTokens?: number; totalTokens?: number } | undefined,
+		inputMessages: { content: string }[],
+		assistantContent: string
+	) => {
+		const rate = pricing[playgroundModel] ?? pricing['gpt-4'];
+		const inputTokens = usage?.inputTokens ?? estimateConversationTokens(inputMessages);
+		const outputTokens = usage?.outputTokens ?? estimateTokens(assistantContent);
+		const totalTokens = usage?.totalTokens ?? inputTokens + outputTokens;
+		playgroundTokenEstimate = totalTokens;
+		const inputCost = (inputTokens / 1000) * rate.input;
+		const outputCost = (outputTokens / 1000) * rate.output;
+		playgroundCost = Number((inputCost + outputCost).toFixed(4));
+	};
+
+	const persistPlaygroundSession = async () => {
+		const customModelValue = customModelId.trim();
+		const settingsPayload = {
+			temperature: playgroundTemp,
+			maxTokens: playgroundTokens,
+			topP: playgroundTopP,
+			frequencyPenalty: playgroundFrequency,
+			presencePenalty: playgroundPresence,
+			modelId: selectedModelId,
+			customModelId: customModelValue || undefined
+		};
+		const payload = {
+			promptId: playgroundPromptId || undefined,
+			model: normalizeModelForStorage(playgroundModel),
+			settingsJson: JSON.stringify(settingsPayload),
+			messagesJson: JSON.stringify(playgroundMessages),
+			totalTokens: playgroundTokenEstimate,
+			totalCost: playgroundCost,
+			latencyMs: playgroundLatency ?? undefined
+		};
+
+		let saved: PlaygroundSession;
+		if (selectedSessionId) {
+			saved = await updatePlaygroundSession(selectedSessionId, payload);
+		} else {
+			saved = await createPlaygroundSession(payload);
+			selectedSessionId = saved.id;
+		}
+
+		const nextSessions = [saved, ...sessions.filter((session) => session.id !== saved.id)];
+		sessionsStore.set(nextSessions);
+	};
+
+	const sendPlaygroundMessage = async () => {
+		if (!provider || !playgroundModel || (requiresPrompt && !playgroundPromptId)) {
+			toast.warning('Select a provider, model, and prompt before sending a message.', {
+				id: sendGuardToastId
+			});
+			return;
+		}
+		if (!playgroundMessage.trim() || isSending) return;
 		const now = Date.now();
-		playgroundMessages = [
+		const userMessage = playgroundMessage.trim();
+		const nextMessages = [
 			...playgroundMessages,
-			{ role: 'user', content: playgroundMessage.trim(), createdAt: now }
+			{ role: 'user', content: userMessage, createdAt: now }
 		];
-		const response = `Draft response for ${playgroundModel}: ${playgroundMessage.trim()}`;
-		playgroundMessages = [
-			...playgroundMessages,
-			{ role: 'assistant', content: response, createdAt: now + 1 }
-		];
-		playgroundLatency = Math.floor(Math.random() * 400) + 120;
+		playgroundMessages = nextMessages;
 		playgroundMessage = '';
-		updateCostEstimate();
+		playgroundError = '';
+		isSending = true;
+		updateCostEstimate(userMessage);
+		void persistPlaygroundSession().catch((err) => {
+			playgroundError = err instanceof Error ? err.message : 'Failed to save conversation.';
+		});
+
+		try {
+			const res = await fetch('/api/MoLOS-AI-Knowledge/playground', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					promptId: playgroundPromptId || undefined,
+					model: playgroundModel,
+					messages: nextMessages.map((message) => ({
+						role: message.role,
+						content: message.content
+					})),
+					settings: {
+						temperature: playgroundTemp,
+						maxTokens: playgroundTokens,
+						topP: playgroundTopP,
+						frequencyPenalty: playgroundFrequency,
+						presencePenalty: playgroundPresence
+					}
+				})
+			});
+
+			if (!res.ok) {
+				const text = await res.text();
+				throw new Error(text || 'Failed to reach provider.');
+			}
+
+			const data = (await res.json()) as {
+				message: string;
+				latencyMs?: number;
+				usage?: { inputTokens?: number; outputTokens?: number; totalTokens?: number };
+			};
+			const assistantMessage = {
+				role: 'assistant',
+				content: data.message || '',
+				createdAt: Date.now()
+			};
+			playgroundMessages = [...nextMessages, assistantMessage];
+			playgroundLatency = data.latencyMs ?? null;
+			updateTotalsFromUsage(data.usage, nextMessages, assistantMessage.content);
+			await persistPlaygroundSession();
+		} catch (err) {
+			playgroundError = err instanceof Error ? err.message : 'Failed to reach provider.';
+		} finally {
+			isSending = false;
+		}
 	};
 
 	const startNewConversation = () => {
@@ -131,6 +261,8 @@
 		playgroundLatency = null;
 		playgroundTokenEstimate = 0;
 		playgroundCost = 0;
+		playgroundError = '';
+		isSending = false;
 	};
 
 	const sessionTitle = (session: PlaygroundSession) =>
@@ -165,23 +297,54 @@
 	const selectSession = (session: PlaygroundSession) => {
 		selectedSessionId = session.id;
 		editingSessionId = '';
+		playgroundError = '';
+		isSending = false;
 		try {
 			const parsed = JSON.parse(session.messagesJson || '[]');
 			playgroundMessages = Array.isArray(parsed) ? parsed : [];
 		} catch {
 			playgroundMessages = [];
 		}
+		let parsedSettings: Record<string, unknown> = {};
 		try {
-			const parsedSettings = JSON.parse(session.settingsJson || '{}');
-			playgroundTemp = parsedSettings.temperature ?? playgroundTemp;
-			playgroundTokens = parsedSettings.maxTokens ?? playgroundTokens;
-			playgroundTopP = parsedSettings.topP ?? playgroundTopP;
-			playgroundFrequency = parsedSettings.frequencyPenalty ?? playgroundFrequency;
-			playgroundPresence = parsedSettings.presencePenalty ?? playgroundPresence;
+			parsedSettings = JSON.parse(session.settingsJson || '{}');
+			playgroundTemp =
+				typeof parsedSettings.temperature === 'number'
+					? parsedSettings.temperature
+					: playgroundTemp;
+			playgroundTokens =
+				typeof parsedSettings.maxTokens === 'number'
+					? parsedSettings.maxTokens
+					: playgroundTokens;
+			playgroundTopP =
+				typeof parsedSettings.topP === 'number' ? parsedSettings.topP : playgroundTopP;
+			playgroundFrequency =
+				typeof parsedSettings.frequencyPenalty === 'number'
+					? parsedSettings.frequencyPenalty
+					: playgroundFrequency;
+			playgroundPresence =
+				typeof parsedSettings.presencePenalty === 'number'
+					? parsedSettings.presencePenalty
+					: playgroundPresence;
 		} catch {
 			// Ignore invalid settings payloads
 		}
-		if (session.model) {
+		const storedModelId =
+			typeof parsedSettings.modelId === 'string' ? parsedSettings.modelId : '';
+		const storedCustomModelId =
+			typeof parsedSettings.customModelId === 'string' ? parsedSettings.customModelId : '';
+		if (storedModelId) {
+			if (storedModelId === 'custom') {
+				selectedModelId = 'custom';
+				customModelId = storedCustomModelId;
+			} else if (modelOptions.includes(storedModelId)) {
+				selectedModelId = storedModelId;
+				customModelId = '';
+			} else {
+				selectedModelId = 'custom';
+				customModelId = storedModelId;
+			}
+		} else if (session.model) {
 			if (modelOptions.includes(session.model)) {
 				selectedModelId = session.model;
 				customModelId = '';
@@ -195,27 +358,6 @@
 		playgroundTokenEstimate = session.totalTokens ?? 0;
 		playgroundCost = session.totalCost ?? 0;
 		playgroundMessage = '';
-	};
-
-	const savePlaygroundSession = async () => {
-		const payload = {
-			promptId: playgroundPromptId || undefined,
-			model: playgroundModel,
-			settingsJson: JSON.stringify({
-				temperature: playgroundTemp,
-				maxTokens: playgroundTokens,
-				topP: playgroundTopP,
-				frequencyPenalty: playgroundFrequency,
-				presencePenalty: playgroundPresence
-			}),
-			messagesJson: JSON.stringify(playgroundMessages),
-			totalTokens: playgroundTokenEstimate,
-			totalCost: playgroundCost,
-			latencyMs: playgroundLatency ?? undefined
-		};
-
-		await createPlaygroundSession(payload);
-		await invalidateAll();
 	};
 
 	const promptLabel = (promptId: string | undefined) => {
@@ -361,20 +503,29 @@
 					onkeydown={(event) => {
 						if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
 							event.preventDefault();
-							sendPlaygroundMessage();
+							if (!isSending) sendPlaygroundMessage();
 						}
 					}}
 					placeholder="Type a message to test the prompt"
 				></textarea>
 				<div class="absolute flex items-center gap-3 bottom-3 left-3">
 					<button
-						class="inline-flex items-center justify-center w-10 h-10 transition rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+						class="inline-flex items-center justify-center w-10 h-10 transition rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
 						aria-label="Send message"
-						onclick={sendPlaygroundMessage}
+						disabled={!canSendMessage}
+						onclick={() => {
+							sendPlaygroundMessage();
+						}}
 					>
 						<Send class="w-4 h-4" />
 					</button>
-					<div class="text-xs text-muted-foreground">Ctrl+enter to send.</div>
+					<div class="text-xs text-muted-foreground">
+						{isSending
+							? 'Sending…'
+							: !provider || !playgroundModel || (requiresPrompt && !playgroundPromptId)
+								? 'Select provider, model, and prompt to send.'
+								: 'Ctrl+enter to send.'}
+					</div>
 				</div>
 			</div>
 		</div>
@@ -385,102 +536,150 @@
 		class="flex flex-col min-h-0 p-6 border rounded-t-none rounded-b-2xl bg-card lg:rounded-r-2xl lg:rounded-l-none lg:rounded-t-2xl"
 	>
 		<div class="flex items-center justify-between">
-			<h3 class="text-lg font-semibold">Model & settings</h3>
-			<div class="text-xs text-muted-foreground">Tuning controls</div>
+			<div>
+				<h3 class="text-lg font-semibold">Model & settings</h3>
+				<div class="text-xs text-muted-foreground">Tune the run before you send</div>
+			</div>
+			<div class="text-[11px] text-muted-foreground">Live estimate</div>
 		</div>
 		<div class="flex flex-col flex-1 min-h-0 mt-4 space-y-4 overflow-auto">
-			<div class="grid gap-3">
-				<select class="h-10 px-3 text-sm border rounded-md bg-background" bind:value={playgroundPromptId}>
-					<option value="">Select saved prompt</option>
-					{#each prompts as prompt}
-						<option value={prompt.id}>{prompt.title}</option>
-					{/each}
-				</select>
-				<div class="flex items-center h-10 px-3 text-sm border rounded-md bg-muted/30 text-muted-foreground">
-					Provider: {providerLabels[provider] ?? provider}
-				</div>
-			</div>
-			<div class="grid gap-3">
-				<select
-					class="h-10 px-3 text-sm border rounded-md bg-background"
-					bind:value={selectedModelId}
-					onchange={updateCostEstimate}
-				>
-					{#each modelOptions as option}
-						<option value={option}>{option}</option>
-					{/each}
-					<option value="custom">Custom...</option>
-				</select>
-				<div class="flex items-center h-10 px-3 text-xs border rounded-md bg-muted/30 text-muted-foreground">
-					Models loaded from settings / API
-				</div>
-			</div>
-			{#if selectedModelId === 'custom'}
-				<div class="grid gap-3">
-					<input
-						class="h-10 px-3 text-sm border rounded-md bg-background"
-						bind:value={customModelId}
-						oninput={updateCostEstimate}
-						placeholder="Enter custom model id"
-					/>
-					<div class="flex items-center h-10 px-3 text-xs border rounded-md bg-muted/30 text-muted-foreground">
-						Custom model id is stored with the session
-					</div>
+			{#if playgroundError}
+				<div class="p-3 text-xs border rounded-2xl border-destructive/40 bg-destructive/10 text-destructive">
+					{playgroundError}
 				</div>
 			{/if}
-			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-				<label class="text-xs text-muted-foreground">
-					Temp
-					<input
-						class="w-full px-3 mt-1 border rounded-md h-9 bg-background"
-						type="number"
-						step="0.1"
-						bind:value={playgroundTemp}
-					/>
+			<div class="p-4 border rounded-2xl bg-background/70">
+				<div class="text-xs font-semibold tracking-wide uppercase text-muted-foreground">
+					Prompt, provider & model
+				</div>
+				<div class="grid gap-3 mt-3">
+					<select class="h-10 px-3 text-sm border rounded-md bg-background" bind:value={playgroundPromptId}>
+						<option value="">Select saved prompt</option>
+						{#each prompts as prompt}
+							<option value={prompt.id}>{prompt.title}</option>
+						{/each}
+					</select>
+					<div class="flex items-center h-10 px-3 text-sm border rounded-md bg-muted/30 text-muted-foreground">
+						Provider: {providerLabels[provider] ?? provider}
+					</div>
+					<select
+						class="h-10 px-3 text-sm border rounded-md bg-background"
+						bind:value={selectedModelId}
+						onchange={updateCostEstimate}
+					>
+						{#each modelOptions as option}
+							<option value={option}>{option}</option>
+						{/each}
+						<option value="custom">Custom...</option>
+					</select>
+					{#if selectedModelId === 'custom'}
+						<input
+							class="h-10 px-3 text-sm border rounded-md bg-background"
+							bind:value={customModelId}
+							oninput={updateCostEstimate}
+							placeholder="Enter custom model id"
+						/>
+						<div class="text-[11px] text-muted-foreground">
+							Stored with the session for recall.
+						</div>
+					{:else}
+						<div class="text-[11px] text-muted-foreground">
+							Models loaded from settings / API
+						</div>
+					{/if}
+					<label class="text-xs text-muted-foreground">
+						Max tokens
+						<input
+							class="w-full px-3 mt-2 border rounded-md h-9 bg-background"
+							type="number"
+							bind:value={playgroundTokens}
+							oninput={updateCostEstimate}
+						/>
 					</label>
-				<label class="text-xs text-muted-foreground">
-					Max tokens
-					<input
-						class="w-full px-3 mt-1 border rounded-md h-9 bg-background"
-						type="number"
-						bind:value={playgroundTokens}
-						oninput={updateCostEstimate}
-					/>
-					</label>
-				<label class="text-xs text-muted-foreground">
-					Top P
-					<input
-						class="w-full px-3 mt-1 border rounded-md h-9 bg-background"
-						type="number"
-						step="0.1"
-						bind:value={playgroundTopP}
-					/>
-				</label>
+				</div>
 			</div>
-			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-				<label class="text-xs text-muted-foreground">
-					Frequency penalty
-					<input
-						class="w-full px-3 mt-1 border rounded-md h-9 bg-background"
-						type="number"
-						step="0.1"
-						bind:value={playgroundFrequency}
-					/>
-				</label>
-				<label class="text-xs text-muted-foreground">
-					Presence penalty
-					<input
-						class="w-full px-3 mt-1 border rounded-md h-9 bg-background"
-						type="number"
-						step="0.1"
-						bind:value={playgroundPresence}
-					/>
-				</label>
+			<div class="p-4 border rounded-2xl bg-background/70">
+				<div class="text-xs font-semibold tracking-wide uppercase text-muted-foreground">
+					Parameters
+				</div>
+				<div class="grid gap-4 mt-4">
+					<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+						<label class="text-xs text-muted-foreground">
+							<div class="flex items-center justify-between">
+								<span>Temp</span>
+								<span class="text-[11px] text-foreground">{playgroundTemp}</span>
+							</div>
+							<input
+								class="w-full mt-2"
+								type="range"
+								min="0"
+								max="2"
+								step="0.1"
+								bind:value={playgroundTemp}
+							/>
+						</label>
+						<label class="text-xs text-muted-foreground">
+							<div class="flex items-center justify-between">
+								<span>Top P</span>
+								<span class="text-[11px] text-foreground">{playgroundTopP}</span>
+							</div>
+							<input
+								class="w-full mt-2"
+								type="range"
+								min="0"
+								max="1"
+								step="0.05"
+								bind:value={playgroundTopP}
+							/>
+						</label>
+					</div>
+					<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+						<label class="text-xs text-muted-foreground">
+							<div class="flex items-center justify-between">
+								<span>Frequency penalty</span>
+								<span class="text-[11px] text-foreground">{playgroundFrequency}</span>
+							</div>
+							<input
+								class="w-full mt-2"
+								type="range"
+								min="-2"
+								max="2"
+								step="0.1"
+								bind:value={playgroundFrequency}
+							/>
+						</label>
+						<label class="text-xs text-muted-foreground">
+							<div class="flex items-center justify-between">
+								<span>Presence penalty</span>
+								<span class="text-[11px] text-foreground">{playgroundPresence}</span>
+							</div>
+							<input
+								class="w-full mt-2"
+								type="range"
+								min="-2"
+								max="2"
+								step="0.1"
+								bind:value={playgroundPresence}
+							/>
+						</label>
+					</div>
+				</div>
 			</div>
-			<div class="p-3 text-xs border rounded-xl bg-muted/30 text-muted-foreground">
-				<div>Tokens: {playgroundTokenEstimate}</div>
-				<div>Estimated cost: ${playgroundCost}</div>
-				<div>Latency: {playgroundLatency ? `${playgroundLatency}ms` : '—'}</div>
+			<div class="grid gap-2 p-4 text-xs border rounded-2xl bg-muted/30 text-muted-foreground">
+				<div class="flex items-center justify-between">
+					<span>Tokens</span>
+					<span class="text-foreground">{playgroundTokenEstimate}</span>
+				</div>
+				<div class="flex items-center justify-between">
+					<span>Estimated cost</span>
+					<span class="text-foreground">${playgroundCost}</span>
+				</div>
+				<div class="flex items-center justify-between">
+					<span>Latency</span>
+					<span class="text-foreground">
+						{playgroundLatency ? `${playgroundLatency}ms` : '—'}
+					</span>
+				</div>
 			</div>
 		</div>
 	</div>
