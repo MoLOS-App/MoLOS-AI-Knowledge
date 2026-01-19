@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { textEnum } from "$lib/server/db/utils";
 import {
   ModelTarget,
+  AiProvider,
   HumanizationLevel,
   HumanizationTone,
   HumanizerStatus,
@@ -75,14 +76,28 @@ export const playgroundSessions = sqliteTable(
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     userId: text("user_id").notNull(),
     promptId: text("prompt_id"),
-    model: textEnum("model", ModelTarget)
-      .notNull()
-      .default(ModelTarget.GPT_4),
+    model: text("model").notNull().default(ModelTarget.GPT_4),
     settingsJson: text("settings_json").notNull().default("{}"),
     messagesJson: text("messages_json").notNull().default("[]"),
     totalTokens: integer("total_tokens").notNull().default(0),
     totalCost: real("total_cost").notNull().default(0),
     latencyMs: integer("latency_ms"),
+    createdAt: integer("created_at").notNull().default(nowSeconds),
+    updatedAt: integer("updated_at").notNull().default(nowSeconds),
+  },
+);
+
+export const aiProviderSettings = sqliteTable(
+  "MoLOS-AI-Knowledge_ai_provider_settings",
+  {
+    userId: text("user_id").primaryKey(),
+    provider: textEnum("provider", AiProvider)
+      .notNull()
+      .default(AiProvider.OPENAI),
+    apiToken: text("api_token").notNull().default(""),
+    preconfiguredModelsJson: text("preconfigured_models_json")
+      .notNull()
+      .default("[]"),
     createdAt: integer("created_at").notNull().default(nowSeconds),
     updatedAt: integer("updated_at").notNull().default(nowSeconds),
   },

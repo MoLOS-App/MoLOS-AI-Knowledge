@@ -7,8 +7,8 @@ import { db } from "$lib/server/db";
 const CreateSchema = z.object({
   promptId: z.string().optional(),
   model: z.string().min(1),
-  settings: z.record(z.any()),
-  messages: z.array(z.any()),
+  settings: z.record(z.string(), z.unknown()),
+  messages: z.array(z.unknown()),
   totalTokens: z.number().min(0),
   totalCost: z.number().min(0),
   latencyMs: z.number().optional(),

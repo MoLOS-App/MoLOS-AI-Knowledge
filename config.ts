@@ -5,6 +5,7 @@ import {
   Wand2,
   Workflow,
   BarChart3,
+  Settings,
 } from "lucide-svelte";
 import type { ModuleConfig } from "$lib/config/types";
 
@@ -49,6 +50,11 @@ export const moduleConfig: ModuleConfig = {
       name: "Analytics",
       icon: BarChart3,
       href: "/ui/MoLOS-AI-Knowledge/analytics",
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      href: "/ui/MoLOS-AI-Knowledge/settings",
     },
   ],
 };

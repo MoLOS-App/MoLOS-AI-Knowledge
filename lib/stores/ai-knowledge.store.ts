@@ -1,6 +1,7 @@
 import { derived, writable } from "svelte/store";
 import type {
   AbTest,
+  AiProviderSettings,
   HumanizerJob,
   LlmFile,
   PlaygroundSession,
@@ -17,6 +18,7 @@ export const humanizerStore = writable<HumanizerJob[]>([]);
 export const chainsStore = writable<PromptChain[]>([]);
 export const abTestsStore = writable<AbTest[]>([]);
 export const analyticsStore = writable<UsageAnalytic[]>([]);
+export const aiProviderSettingsStore = writable<AiProviderSettings | null>(null);
 
 export const moduleUIState = writable({
   loading: false,
@@ -26,17 +28,16 @@ export const moduleUIState = writable({
 
 export const promptStats = derived(promptsStore, ($prompts) => {
   const total = $prompts.length;
-  const favorites = $prompts.filter((p) => p.isFavorite).length;
   const deleted = $prompts.filter((p) => p.isDeleted).length;
 
-  return { total, favorites, deleted };
+  return { total, deleted };
 });
 
 export async function loadModuleData() {
   moduleUIState.update((state) => ({ ...state, loading: true, error: null }));
 
   try {
-    const [prompts, files, sessions, jobs, chains, tests, analytics] =
+    const [prompts, files, sessions, jobs, chains, tests, analytics, settings] =
       await Promise.all([
         api.fetchPrompts(),
         api.fetchLlmFiles(),
@@ -45,6 +46,7 @@ export async function loadModuleData() {
         api.fetchPromptChains(),
         api.fetchAbTests(),
         api.fetchAnalytics(),
+        api.fetchAiProviderSettings(),
       ]);
 
     promptsStore.set(prompts);
@@ -54,6 +56,7 @@ export async function loadModuleData() {
     chainsStore.set(chains);
     abTestsStore.set(tests);
     analyticsStore.set(analytics);
+    aiProviderSettingsStore.set(settings);
 
     moduleUIState.update((state) => ({
       ...state,
@@ -92,4 +95,8 @@ export async function refreshAbTests() {
 
 export async function refreshAnalytics() {
   analyticsStore.set(await api.fetchAnalytics());
+}
+
+export async function refreshAiProviderSettings() {
+  aiProviderSettingsStore.set(await api.fetchAiProviderSettings());
 }

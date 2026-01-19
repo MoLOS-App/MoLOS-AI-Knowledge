@@ -8,11 +8,13 @@ import type {
   HumanizerJob,
   LlmFile,
   LlmFileVersion,
+  AiProviderSettings,
   PlaygroundSession,
   Prompt,
   PromptChain,
   PromptDeployment,
   PromptVersion,
+  UpdateAiProviderSettingsInput,
   UpdateAbTestInput,
   UpdateLlmFileInput,
   UpdatePromptChainInput,
@@ -139,6 +141,30 @@ export async function createPlaygroundSession(
       }),
     }),
   );
+}
+
+export async function fetchAiProviderSettings(): Promise<AiProviderSettings> {
+  return handle(await fetch(`${base}/settings`));
+}
+
+export async function updateAiProviderSettings(
+  data: UpdateAiProviderSettingsInput,
+): Promise<AiProviderSettings> {
+  return handle(
+    await fetch(`${base}/settings`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }),
+  );
+}
+
+export async function fetchProviderModels(provider?: string): Promise<{
+  provider: string;
+  models: string[];
+}> {
+  const url = provider ? `${base}/models?provider=${provider}` : `${base}/models`;
+  return handle(await fetch(url));
 }
 
 export async function fetchHumanizerJobs(): Promise<HumanizerJob[]> {

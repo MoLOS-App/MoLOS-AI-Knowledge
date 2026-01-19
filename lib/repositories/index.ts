@@ -3,6 +3,7 @@ export { PromptRepository } from './prompt-repository';
 export { LlmFileRepository } from './llm-file-repository';
 export { PromptChainRepository } from './prompt-chain-repository';
 export { PlaygroundSessionRepository } from './playground-session-repository';
+export { AiProviderSettingsRepository } from './ai-provider-settings-repository';
 export { HumanizerJobRepository } from './humanizer-job-repository';
 export { AbTestRepository } from './ab-test-repository';
 export { UsageAnalyticsRepository } from './usage-analytics-repository';

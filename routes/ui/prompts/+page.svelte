@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
+	import { flip } from 'svelte/animate';
+	import { fade, fly } from 'svelte/transition';
 	import { deletePrompt } from '$lib/stores/external_modules/MoLOS-AI-Knowledge/api';
 	import type {
 		Prompt,
@@ -21,24 +23,35 @@
 	let files: LlmFile[] = [];
 	let visiblePrompts: Prompt[] = [];
 	let visibleFiles: LlmFile[] = [];
+	let labelOptions: string[] = [];
 
 	let search = '';
+	let labelFilter = '';
 
 	let promptDeleteOpen = false;
 	let promptToDelete: Prompt | null = null;
 
 	const formatCount = (value: number, label: string) =>
 		`${value} ${label}${value === 1 ? '' : 's'}`;
+	const normalize = (value: string) => value.trim().toLowerCase();
 
 	$: ({ prompts, files } = data);
 
-	$: visiblePrompts = prompts
-		.filter((prompt) => prompt.title.toLowerCase().includes(search.toLowerCase()));
+	$: visiblePrompts = prompts.filter((prompt) => {
+		const matchesSearch = prompt.title.toLowerCase().includes(search.toLowerCase());
+		const normalizedLabel = normalize(labelFilter);
+		const matchesLabel =
+			!normalizedLabel ||
+			prompt.tags.some((tag) => normalize(tag) === normalizedLabel);
+		return matchesSearch && matchesLabel;
+	});
+
+	$: labelOptions = Array.from(
+		new Set(prompts.flatMap((prompt) => prompt.tags.map((tag) => tag.trim())).filter(Boolean))
+	).sort((a, b) => a.localeCompare(b));
 
 	$: visibleFiles = files
-		.filter((file) =>
-			`${file.title} ${file.filename}`.toLowerCase().includes(search.toLowerCase())
-		);
+		.filter((file) => file.title.toLowerCase().includes(search.toLowerCase()));
 
 	const openNewPrompt = () => {
 		goto('/ui/MoLOS-AI-Knowledge/prompts/new');
@@ -78,8 +91,8 @@
 	};
 </script>
 
-<div class="space-y-6">
-	<section class="rounded-[28px] border bg-card/80 p-6 shadow-sm">
+<div class="space-y-6" in:fade={{ duration: 180 }}>
+	<section class="rounded-[28px] border bg-card/80 p-6 shadow-sm" in:fly={{ y: 12, duration: 220 }}>
 		<div class="flex flex-col gap-5">
 			<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 				<div>
@@ -112,16 +125,50 @@
 						bind:value={search}
 					/>
 				</div>
+				<div class="w-full md:max-w-xs">
+					<input
+						class="h-10 w-full rounded-full border bg-background px-4 text-sm"
+						placeholder="Filter by label"
+						bind:value={labelFilter}
+					/>
+				</div>
 				<div class="text-xs text-muted-foreground">
 					{formatCount(visiblePrompts.length, 'prompt')} •
 					{formatCount(visibleFiles.length, 'LLM.txt file')}
 				</div>
 			</div>
 
+			{#if labelOptions.length}
+				<div class="flex flex-wrap items-center gap-2 text-xs">
+					<button
+						class={`rounded-full border px-3 py-1 ${
+							!labelFilter.trim()
+								? 'bg-foreground text-background'
+								: 'bg-background text-foreground'
+						}`}
+						onclick={() => (labelFilter = '')}
+					>
+						All labels
+					</button>
+					{#each labelOptions as label}
+						<button
+							class={`rounded-full border px-3 py-1 ${
+								normalize(labelFilter) === normalize(label)
+									? 'bg-foreground text-background'
+									: 'bg-background text-foreground'
+							}`}
+							onclick={() => (labelFilter = label)}
+						>
+							{label}
+						</button>
+					{/each}
+				</div>
+			{/if}
+
 		</div>
 	</section>
 
-	<section class="space-y-4">
+	<section class="space-y-4" in:fade={{ duration: 180 }}>
 		<div class="flex items-center justify-between">
 			<h3 class="text-lg font-semibold">Prompts</h3>
 			<span class="text-xs text-muted-foreground">
@@ -133,6 +180,8 @@
 				<article
 					class="cursor-pointer rounded-2xl border bg-card/80 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
 					onclick={() => openEditPrompt(prompt)}
+					in:fly={{ y: 12, duration: 220, delay: index * 20 }}
+					animate:flip
 				>
 					<div class="flex items-start justify-between gap-3">
 						<div>
@@ -140,39 +189,8 @@
 								Prompt
 							</span>
 							<div class="text-sm font-semibold">{prompt.title}</div>
-							<div class="text-xs text-muted-foreground">
-								{prompt.category} • {prompt.modelTarget}
-							</div>
 						</div>
-						<div class="flex gap-2 text-[11px]">
-							<button
-								class="rounded-full border px-3 py-1"
-								onclick={(event) => {
-									event.stopPropagation();
-									openEditPrompt(prompt);
-								}}
-							>
-								Edit
-							</button>
-							<button
-								class="rounded-full border px-3 py-1"
-								onclick={(event) => {
-									event.stopPropagation();
-									openSharePrompt(prompt.id);
-								}}
-							>
-								Share
-							</button>
-							<button
-								class="rounded-full border px-3 py-1"
-								onclick={(event) => {
-									event.stopPropagation();
-									openDeletePrompt(prompt);
-								}}
-							>
-								Delete
-							</button>
-						</div>
+						<div class="text-[11px] text-muted-foreground">Open to manage</div>
 					</div>
 					<p class="mt-3 text-xs text-muted-foreground">
 						{prompt.description || prompt.content}
@@ -196,7 +214,7 @@
 		</div>
 	</section>
 
-	<section class="space-y-4">
+	<section class="space-y-4" in:fade={{ duration: 180 }}>
 		<div class="flex items-center justify-between">
 			<h3 class="text-lg font-semibold">LLM.txt</h3>
 			<span class="text-xs text-muted-foreground">
@@ -208,6 +226,8 @@
 				<article
 					class="cursor-pointer rounded-2xl border bg-card/80 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
 					onclick={() => openEditLlmFile(file)}
+					in:fly={{ y: 12, duration: 220, delay: index * 20 }}
+					animate:flip
 				>
 					<div class="flex items-start justify-between gap-3">
 						<div>
@@ -215,24 +235,12 @@
 								LLM.txt
 							</span>
 							<div class="text-sm font-semibold">{file.title}</div>
-							<div class="text-xs text-muted-foreground">
-								{file.filename} • v{file.currentVersion}
-							</div>
+							<div class="text-xs text-muted-foreground">v{file.currentVersion}</div>
 						</div>
-						<div class="flex gap-2 text-[11px]">
-							<button
-								class="rounded-full border px-3 py-1"
-								onclick={(event) => {
-									event.stopPropagation();
-									openEditLlmFile(file);
-								}}
-							>
-								Edit
-							</button>
-						</div>
+						<div class="text-[11px] text-muted-foreground">Open to manage</div>
 					</div>
 					<p class="mt-3 text-xs text-muted-foreground">
-						Instruction set for {file.filename}.
+						Instruction set for {file.title}.
 					</p>
 				</article>
 			{/each}

@@ -1,7 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { playgroundSessions } from "$lib/server/db/schema/external_modules/MoLOS-AI-Knowledge/tables";
 import type { PlaygroundSession } from "$lib/models/external_modules/MoLOS-AI-Knowledge";
-import { BaseRepository } from "$lib/repositories/base-repository";
+import { BaseRepository } from "./base-repository";
 import { toJsonString } from "./utils";
 
 export type PlaygroundSessionInput = {
@@ -16,7 +16,11 @@ export type PlaygroundSessionInput = {
 
 export class PlaygroundSessionRepository extends BaseRepository {
   private mapSession(row: typeof playgroundSessions.$inferSelect): PlaygroundSession {
-    return { ...row };
+    return {
+      ...row,
+      promptId: row.promptId ?? undefined,
+      latencyMs: row.latencyMs ?? undefined,
+    };
   }
 
   async listByUserId(userId: string, limit = 20): Promise<PlaygroundSession[]> {

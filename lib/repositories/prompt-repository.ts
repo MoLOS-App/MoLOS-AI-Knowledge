@@ -3,7 +3,6 @@ import { prompts, promptVersions } from "$lib/server/db/schema/external_modules/
 import type {
   CreatePromptInput,
   Prompt,
-  PromptCategory,
   PromptVersion,
   UpdatePromptInput,
 } from "$lib/models/external_modules/MoLOS-AI-Knowledge";
@@ -12,18 +11,22 @@ import { parseJsonArray, toJsonString } from "./utils";
 
 export type PromptListFilters = {
   search?: string;
-  category?: PromptCategory;
   tag?: string;
-  favoriteOnly?: boolean;
   includeDeleted?: boolean;
 };
 
 export class PromptRepository extends BaseRepository {
   private mapPrompt(row: typeof prompts.$inferSelect): Prompt {
     return {
-      ...row,
+      id: row.id,
+      userId: row.userId,
+      title: row.title,
       description: row.description ?? undefined,
+      content: row.content,
       tags: parseJsonArray(row.tags),
+      isDeleted: row.isDeleted,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     };
   }
 
@@ -40,14 +43,6 @@ export class PromptRepository extends BaseRepository {
 
     if (!filters.includeDeleted) {
       conditions.push(eq(prompts.isDeleted, false));
-    }
-
-    if (filters.category) {
-      conditions.push(eq(prompts.category, filters.category));
-    }
-
-    if (filters.favoriteOnly) {
-      conditions.push(eq(prompts.isFavorite, true));
     }
 
     if (filters.search) {
@@ -96,11 +91,7 @@ export class PromptRepository extends BaseRepository {
           title: data.title,
           description: data.description,
           content: data.content,
-          category: data.category,
-          modelTarget: data.modelTarget,
           tags,
-          isFavorite: data.isFavorite,
-          isPrivate: data.isPrivate,
         })
         .returning()
         .all();
@@ -113,11 +104,7 @@ export class PromptRepository extends BaseRepository {
           title: data.title,
           description: data.description,
           content: data.content,
-          category: data.category,
-          modelTarget: data.modelTarget,
           tags,
-          isFavorite: data.isFavorite ?? false,
-          isPrivate: data.isPrivate ?? false,
           isDeleted: false,
           createdAt: now,
           updatedAt: now,
@@ -129,7 +116,7 @@ export class PromptRepository extends BaseRepository {
         versionNumber: 1,
         content: data.content,
         commitMessage: data.commitMessage,
-      });
+      }).run();
 
       return this.mapPrompt(promptRow);
     });
@@ -157,11 +144,7 @@ export class PromptRepository extends BaseRepository {
       if (updates.title !== undefined) updateData.title = updates.title;
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.content !== undefined) updateData.content = updates.content;
-      if (updates.category !== undefined) updateData.category = updates.category;
-      if (updates.modelTarget !== undefined) updateData.modelTarget = updates.modelTarget;
       if (updates.tags !== undefined) updateData.tags = toJsonString(updates.tags, "[]");
-      if (updates.isFavorite !== undefined) updateData.isFavorite = updates.isFavorite;
-      if (updates.isPrivate !== undefined) updateData.isPrivate = updates.isPrivate;
       if (updates.isDeleted !== undefined) updateData.isDeleted = updates.isDeleted;
 
       const updated = tx
@@ -188,7 +171,7 @@ export class PromptRepository extends BaseRepository {
           versionNumber: nextVersion,
           content: updates.content,
           commitMessage: updates.commitMessage,
-        });
+        }).run();
       }
 
       const updatedRow =
@@ -222,5 +205,27 @@ export class PromptRepository extends BaseRepository {
       .orderBy(desc(promptVersions.versionNumber));
 
     return results.map((row) => this.mapVersion(row));
+  }
+
+  async deleteVersion(promptId: string, versionId: string, userId: string): Promise<boolean> {
+    const versions = await this.db
+      .select({ id: promptVersions.id })
+      .from(promptVersions)
+      .where(and(eq(promptVersions.promptId, promptId), eq(promptVersions.userId, userId)))
+      .orderBy(desc(promptVersions.versionNumber));
+
+    if (versions.length <= 1) return false;
+
+    const result = await this.db
+      .delete(promptVersions)
+      .where(
+        and(
+          eq(promptVersions.id, versionId),
+          eq(promptVersions.promptId, promptId),
+          eq(promptVersions.userId, userId),
+        ),
+      );
+
+    return result.changes > 0;
   }
 }

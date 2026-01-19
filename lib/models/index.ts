@@ -6,6 +6,13 @@ export const ModelTarget = {
   GEMINI_PRO: "gemini-pro",
 } as const;
 
+export const AiProvider = {
+  OPENAI: "openai",
+  ANTHROPIC: "anthropic",
+  OPENROUTER: "openrouter",
+  XAI: "xai",
+} as const;
+
 export const HumanizationLevel = {
   LIGHT: "light",
   MEDIUM: "medium",
@@ -81,12 +88,21 @@ export interface PlaygroundSession {
   id: string;
   userId: string;
   promptId?: string;
-  model: ModelTarget;
+  model: string;
   settingsJson: string;
   messagesJson: string;
   totalTokens: number;
   totalCost: number;
   latencyMs?: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface AiProviderSettings {
+  userId: string;
+  provider: AiProvider;
+  apiToken: string;
+  preconfiguredModels: string[];
   createdAt: number;
   updatedAt: number;
 }
@@ -148,6 +164,7 @@ export interface PromptDeployment {
 }
 
 export type ModelTarget = (typeof ModelTarget)[keyof typeof ModelTarget];
+export type AiProvider = (typeof AiProvider)[keyof typeof AiProvider];
 export type HumanizationLevel =
   (typeof HumanizationLevel)[keyof typeof HumanizationLevel];
 export type HumanizationTone =
@@ -182,6 +199,10 @@ export type CreatePromptChainInput = Omit<
 >;
 export type UpdatePromptChainInput = Partial<
   Omit<PromptChain, "id" | "userId" | "createdAt" | "updatedAt">
+>;
+
+export type UpdateAiProviderSettingsInput = Partial<
+  Omit<AiProviderSettings, "userId" | "createdAt" | "updatedAt">
 >;
 
 export type CreateAbTestInput = Omit<
