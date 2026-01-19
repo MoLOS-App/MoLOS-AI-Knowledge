@@ -1,10 +1,5 @@
 import type { PageServerLoad } from './$types';
-import type {
-	Prompt,
-	PromptVersion,
-	SharedLibrary,
-	SharedLibraryPrompt
-} from '$lib/models/external_modules/MoLOS-AI-Knowledge';
+import type { Prompt, LlmFile } from '$lib/models/external_modules/MoLOS-AI-Knowledge';
 
 const safeFetch = async <T>(
 	fetcher: typeof fetch,
@@ -20,36 +15,12 @@ const safeFetch = async <T>(
 	}
 };
 
-export const load: PageServerLoad = async ({ fetch, url }) => {
-	const selectedPromptId = url.searchParams.get('promptId');
-	const selectedLibraryId = url.searchParams.get('libraryId');
+export const load: PageServerLoad = async ({ fetch }) => {
 	const prompts = await safeFetch<Prompt[]>(fetch, '/api/MoLOS-AI-Knowledge/prompts', []);
-	const libraries = await safeFetch<SharedLibrary[]>(
-		fetch,
-		'/api/MoLOS-AI-Knowledge/shared-libraries',
-		[]
-	);
-	const promptVersions = selectedPromptId
-		? await safeFetch<PromptVersion[]>(
-				fetch,
-				`/api/MoLOS-AI-Knowledge/prompts/${selectedPromptId}/versions`,
-				[]
-			)
-		: [];
-	const libraryPrompts = selectedLibraryId
-		? await safeFetch<SharedLibraryPrompt[]>(
-				fetch,
-				`/api/MoLOS-AI-Knowledge/shared-libraries/${selectedLibraryId}/prompts`,
-				[]
-			)
-		: [];
+	const files = await safeFetch<LlmFile[]>(fetch, '/api/MoLOS-AI-Knowledge/llm-files', []);
 
 	return {
 		prompts,
-		promptVersions,
-		libraries,
-		libraryPromptIds: libraryPrompts.map((prompt) => prompt.promptId),
-		selectedPromptId,
-		selectedLibraryId
+		files
 	};
 };

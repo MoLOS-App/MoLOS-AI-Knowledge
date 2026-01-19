@@ -6,7 +6,6 @@ import type {
   PlaygroundSession,
   Prompt,
   PromptChain,
-  SharedLibrary,
   UsageAnalytic,
 } from "$lib/models/external_modules/MoLOS-AI-Knowledge";
 import * as api from "./api";
@@ -18,7 +17,6 @@ export const humanizerStore = writable<HumanizerJob[]>([]);
 export const chainsStore = writable<PromptChain[]>([]);
 export const abTestsStore = writable<AbTest[]>([]);
 export const analyticsStore = writable<UsageAnalytic[]>([]);
-export const librariesStore = writable<SharedLibrary[]>([]);
 
 export const moduleUIState = writable({
   loading: false,
@@ -38,7 +36,7 @@ export async function loadModuleData() {
   moduleUIState.update((state) => ({ ...state, loading: true, error: null }));
 
   try {
-    const [prompts, files, sessions, jobs, chains, tests, analytics, libraries] =
+    const [prompts, files, sessions, jobs, chains, tests, analytics] =
       await Promise.all([
         api.fetchPrompts(),
         api.fetchLlmFiles(),
@@ -47,7 +45,6 @@ export async function loadModuleData() {
         api.fetchPromptChains(),
         api.fetchAbTests(),
         api.fetchAnalytics(),
-        api.fetchSharedLibraries(),
       ]);
 
     promptsStore.set(prompts);
@@ -57,7 +54,6 @@ export async function loadModuleData() {
     chainsStore.set(chains);
     abTestsStore.set(tests);
     analyticsStore.set(analytics);
-    librariesStore.set(libraries);
 
     moduleUIState.update((state) => ({
       ...state,
@@ -96,8 +92,4 @@ export async function refreshAbTests() {
 
 export async function refreshAnalytics() {
   analyticsStore.set(await api.fetchAnalytics());
-}
-
-export async function refreshLibraries() {
-  librariesStore.set(await api.fetchSharedLibraries());
 }

@@ -14,7 +14,7 @@
 		"test": "npm run test:unit -- --run",
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio",
-		"init:standalone": "tsx ../MoLOS/scripts/init-standalone.ts"
+		"init:standalone": "node -e \"const { execSync } = require('node:child_process');const cwd = process.cwd();const marker = '/external_modules/';const idx = cwd.lastIndexOf(marker);const root = idx > -1 ? cwd.slice(0, idx) : cwd;execSync('tsx ' + root + '/scripts/init-standalone.ts', { stdio: 'inherit' });\""
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^3.3.1",

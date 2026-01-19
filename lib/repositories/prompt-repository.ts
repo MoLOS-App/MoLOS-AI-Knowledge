@@ -1,17 +1,18 @@
-import { and, desc, eq, like, or } from "drizzle-orm";
+import { and, desc, eq, like, or, sql } from "drizzle-orm";
 import { prompts, promptVersions } from "$lib/server/db/schema/external_modules/MoLOS-AI-Knowledge/tables";
 import type {
   CreatePromptInput,
   Prompt,
+  PromptCategory,
   PromptVersion,
   UpdatePromptInput,
 } from "$lib/models/external_modules/MoLOS-AI-Knowledge";
-import { BaseRepository } from "$lib/repositories/base-repository";
+import { BaseRepository } from "./base-repository";
 import { parseJsonArray, toJsonString } from "./utils";
 
 export type PromptListFilters = {
   search?: string;
-  category?: string;
+  category?: PromptCategory;
   tag?: string;
   favoriteOnly?: boolean;
   includeDeleted?: boolean;
@@ -21,12 +22,17 @@ export class PromptRepository extends BaseRepository {
   private mapPrompt(row: typeof prompts.$inferSelect): Prompt {
     return {
       ...row,
+      description: row.description ?? undefined,
       tags: parseJsonArray(row.tags),
     };
   }
 
   private mapVersion(row: typeof promptVersions.$inferSelect): PromptVersion {
-    return { ...row };
+    return {
+      ...row,
+      commitMessage: row.commitMessage ?? undefined,
+      diffSummary: row.diffSummary ?? undefined,
+    };
   }
 
   async listByUserId(userId: string, filters: PromptListFilters = {}): Promise<Prompt[]> {
@@ -46,13 +52,12 @@ export class PromptRepository extends BaseRepository {
 
     if (filters.search) {
       const term = `%${filters.search}%`;
-      conditions.push(
-        or(
-          like(prompts.title, term),
-          like(prompts.description, term),
-          like(prompts.content, term),
-        ),
+      const searchCondition = or(
+        like(prompts.title, term),
+        like(sql<string>`coalesce(${prompts.description}, '')`, term),
+        like(prompts.content, term),
       );
+      if (searchCondition) conditions.push(searchCondition);
     }
 
     if (filters.tag) {
@@ -97,7 +102,8 @@ export class PromptRepository extends BaseRepository {
           isFavorite: data.isFavorite,
           isPrivate: data.isPrivate,
         })
-        .returning();
+        .returning()
+        .all();
 
       const promptRow =
         inserted[0] ??
@@ -139,7 +145,8 @@ export class PromptRepository extends BaseRepository {
         .select()
         .from(prompts)
         .where(and(eq(prompts.id, id), eq(prompts.userId, userId)))
-        .limit(1);
+        .limit(1)
+        .all();
 
       if (!existing[0]) return null;
 
@@ -161,7 +168,8 @@ export class PromptRepository extends BaseRepository {
         .update(prompts)
         .set(updateData)
         .where(and(eq(prompts.id, id), eq(prompts.userId, userId)))
-        .returning();
+        .returning()
+        .all();
 
       if (updates.content !== undefined) {
         const latestVersion = tx
@@ -169,7 +177,8 @@ export class PromptRepository extends BaseRepository {
           .from(promptVersions)
           .where(and(eq(promptVersions.promptId, id), eq(promptVersions.userId, userId)))
           .orderBy(desc(promptVersions.versionNumber))
-          .limit(1);
+          .limit(1)
+          .all();
 
         const nextVersion = (latestVersion[0]?.versionNumber ?? 0) + 1;
 

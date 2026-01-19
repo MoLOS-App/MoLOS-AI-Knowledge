@@ -5,7 +5,6 @@ import type {
   CreateLlmFileInput,
   CreatePromptChainInput,
   CreatePromptInput,
-  CreateSharedLibraryInput,
   HumanizerJob,
   LlmFile,
   LlmFileVersion,
@@ -14,9 +13,6 @@ import type {
   PromptChain,
   PromptDeployment,
   PromptVersion,
-  SharedLibrary,
-  SharedLibraryMember,
-  SharedLibraryPrompt,
   UpdateAbTestInput,
   UpdateLlmFileInput,
   UpdatePromptChainInput,
@@ -43,6 +39,7 @@ export async function createPrompt(data: CreatePromptInput): Promise<Prompt> {
   return handle(
     await fetch(`${base}/prompts`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }),
   );
@@ -52,6 +49,7 @@ export async function updatePrompt(id: string, data: UpdatePromptInput): Promise
   return handle(
     await fetch(`${base}/prompts/${id}`, {
       method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }),
   );
@@ -69,6 +67,17 @@ export async function fetchPromptVersions(id: string): Promise<PromptVersion[]> 
   return handle(await fetch(`${base}/prompts/${id}/versions`));
 }
 
+export async function deletePromptVersion(
+  promptId: string,
+  versionId: string,
+): Promise<void> {
+  await handle(
+    await fetch(`${base}/prompts/${promptId}/versions/${versionId}`, {
+      method: "DELETE",
+    }),
+  );
+}
+
 export async function fetchLlmFiles(): Promise<LlmFile[]> {
   return handle(await fetch(`${base}/llm-files`));
 }
@@ -77,6 +86,7 @@ export async function createLlmFile(data: CreateLlmFileInput): Promise<LlmFile> 
   return handle(
     await fetch(`${base}/llm-files`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }),
   );
@@ -86,6 +96,7 @@ export async function updateLlmFile(id: string, data: UpdateLlmFileInput): Promi
   return handle(
     await fetch(`${base}/llm-files/${id}`, {
       method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }),
   );
@@ -93,6 +104,17 @@ export async function updateLlmFile(id: string, data: UpdateLlmFileInput): Promi
 
 export async function fetchLlmFileVersions(id: string): Promise<LlmFileVersion[]> {
   return handle(await fetch(`${base}/llm-files/${id}/versions`));
+}
+
+export async function deleteLlmFileVersion(
+  fileId: string,
+  versionId: string,
+): Promise<void> {
+  await handle(
+    await fetch(`${base}/llm-files/${fileId}/versions/${versionId}`, {
+      method: "DELETE",
+    }),
+  );
 }
 
 export async function fetchPlaygroundSessions(): Promise<PlaygroundSession[]> {
@@ -105,6 +127,7 @@ export async function createPlaygroundSession(
   return handle(
     await fetch(`${base}/playground-sessions`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         promptId: data.promptId,
         model: data.model,
@@ -128,6 +151,7 @@ export async function createHumanizerJob(
   return handle(
     await fetch(`${base}/humanizer`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }),
   );
@@ -143,6 +167,7 @@ export async function createPromptChain(
   return handle(
     await fetch(`${base}/prompt-chains`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }),
   );
@@ -155,6 +180,7 @@ export async function updatePromptChain(
   return handle(
     await fetch(`${base}/prompt-chains/${id}`, {
       method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }),
   );
@@ -168,6 +194,7 @@ export async function createAbTest(data: CreateAbTestInput): Promise<AbTest> {
   return handle(
     await fetch(`${base}/ab-tests`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }),
   );
@@ -177,6 +204,7 @@ export async function updateAbTest(id: string, data: UpdateAbTestInput): Promise
   return handle(
     await fetch(`${base}/ab-tests/${id}`, {
       method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }),
   );
@@ -192,51 +220,7 @@ export async function createAnalytics(
   return handle(
     await fetch(`${base}/analytics`, {
       method: "POST",
-      body: JSON.stringify(data),
-    }),
-  );
-}
-
-export async function fetchSharedLibraries(): Promise<SharedLibrary[]> {
-  return handle(await fetch(`${base}/shared-libraries`));
-}
-
-export async function createSharedLibrary(
-  data: CreateSharedLibraryInput,
-): Promise<SharedLibrary> {
-  return handle(
-    await fetch(`${base}/shared-libraries`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-  );
-}
-
-export async function addSharedLibraryMember(
-  libraryId: string,
-  data: { memberId: string; role: string },
-): Promise<SharedLibraryMember> {
-  return handle(
-    await fetch(`${base}/shared-libraries/${libraryId}/members`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
-  );
-}
-
-export async function fetchSharedLibraryPrompts(
-  libraryId: string,
-): Promise<SharedLibraryPrompt[]> {
-  return handle(await fetch(`${base}/shared-libraries/${libraryId}/prompts`));
-}
-
-export async function addSharedLibraryPrompt(
-  libraryId: string,
-  data: { promptId: string },
-): Promise<SharedLibraryPrompt> {
-  return handle(
-    await fetch(`${base}/shared-libraries/${libraryId}/prompts`, {
-      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }),
   );
@@ -254,6 +238,7 @@ export async function createDeployment(data: {
   return handle(
     await fetch(`${base}/deployments`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     }),
   );

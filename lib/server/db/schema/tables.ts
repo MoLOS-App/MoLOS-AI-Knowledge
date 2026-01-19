@@ -8,7 +8,6 @@ import {
   HumanizationTone,
   HumanizerStatus,
   AbTestStatus,
-  LibraryRole,
 } from "$lib/models/external_modules/MoLOS-AI-Knowledge";
 
 const nowSeconds = sql`(strftime('%s','now'))`;
@@ -157,50 +156,6 @@ export const usageAnalytics = sqliteTable(
     metricType: text("metric_type").notNull(),
     value: real("value").notNull(),
     metadataJson: text("metadata_json").notNull().default("{}"),
-    createdAt: integer("created_at").notNull().default(nowSeconds),
-  },
-);
-
-export const sharedLibraries = sqliteTable(
-  "MoLOS-AI-Knowledge_shared_libraries",
-  {
-    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    ownerUserId: text("owner_user_id").notNull(),
-    name: text("name").notNull(),
-    description: text("description"),
-    isPrivate: integer("is_private", { mode: "boolean" })
-      .notNull()
-      .default(true),
-    createdAt: integer("created_at").notNull().default(nowSeconds),
-    updatedAt: integer("updated_at").notNull().default(nowSeconds),
-  },
-);
-
-export const sharedLibraryMembers = sqliteTable(
-  "MoLOS-AI-Knowledge_shared_library_members",
-  {
-    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    libraryId: text("library_id")
-      .notNull()
-      .references(() => sharedLibraries.id, { onDelete: "cascade" }),
-    userId: text("user_id").notNull(),
-    role: textEnum("role", LibraryRole)
-      .notNull()
-      .default(LibraryRole.VIEWER),
-    createdAt: integer("created_at").notNull().default(nowSeconds),
-  },
-);
-
-export const sharedLibraryPrompts = sqliteTable(
-  "MoLOS-AI-Knowledge_shared_library_prompts",
-  {
-    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-    libraryId: text("library_id")
-      .notNull()
-      .references(() => sharedLibraries.id, { onDelete: "cascade" }),
-    promptId: text("prompt_id")
-      .notNull()
-      .references(() => prompts.id, { onDelete: "cascade" }),
     createdAt: integer("created_at").notNull().default(nowSeconds),
   },
 );

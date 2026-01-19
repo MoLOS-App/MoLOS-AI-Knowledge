@@ -41,12 +41,6 @@ export const AbTestStatus = {
   COMPLETED: "completed",
 } as const;
 
-export const LibraryRole = {
-  VIEWER: "viewer",
-  EDITOR: "editor",
-  ADMIN: "admin",
-} as const;
-
 export interface Prompt {
   id: string;
   userId: string;
@@ -158,31 +152,6 @@ export interface UsageAnalytic {
   createdAt: number;
 }
 
-export interface SharedLibrary {
-  id: string;
-  ownerUserId: string;
-  name: string;
-  description?: string;
-  isPrivate: boolean;
-  createdAt: number;
-  updatedAt: number;
-}
-
-export interface SharedLibraryMember {
-  id: string;
-  libraryId: string;
-  userId: string;
-  role: LibraryRole;
-  createdAt: number;
-}
-
-export interface SharedLibraryPrompt {
-  id: string;
-  libraryId: string;
-  promptId: string;
-  createdAt: number;
-}
-
 export interface PromptDeployment {
   id: string;
   promptId: string;
@@ -201,8 +170,6 @@ export type HumanizationTone =
 export type HumanizerStatus =
   (typeof HumanizerStatus)[keyof typeof HumanizerStatus];
 export type AbTestStatus = (typeof AbTestStatus)[keyof typeof AbTestStatus];
-export type LibraryRole = (typeof LibraryRole)[keyof typeof LibraryRole];
-
 export type CreatePromptInput = Omit<
   Prompt,
   "id" | "userId" | "createdAt" | "updatedAt" | "isDeleted"
@@ -238,9 +205,4 @@ export type CreateAbTestInput = Omit<
 >;
 export type UpdateAbTestInput = Partial<
   Omit<AbTest, "id" | "userId" | "createdAt" | "updatedAt">
->;
-
-export type CreateSharedLibraryInput = Omit<
-  SharedLibrary,
-  "id" | "ownerUserId" | "createdAt" | "updatedAt"
 >;

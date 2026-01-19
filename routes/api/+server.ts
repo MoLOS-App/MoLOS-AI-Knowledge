@@ -7,5 +7,8 @@ export const GET: RequestHandler = async ({ locals }) => {
     throw error(401, "Unauthorized");
   }
 
-  return json({ ok: true, module: "MoLOS-AI-Knowledge" });
+  return json({
+    ok: true,
+    module: "MoLOS-AI-Knowledge",
+  });
 };

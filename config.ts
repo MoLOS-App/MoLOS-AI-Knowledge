@@ -3,7 +3,6 @@ import {
   Sparkles,
   MessageSquareText,
   Wand2,
-  Files,
   Workflow,
   BarChart3,
 } from "lucide-svelte";
@@ -35,11 +34,6 @@ export const moduleConfig: ModuleConfig = {
       name: "Humanizer",
       icon: Wand2,
       href: "/ui/MoLOS-AI-Knowledge/humanizer",
-    },
-    {
-      name: "LLM.txt",
-      icon: Files,
-      href: "/ui/MoLOS-AI-Knowledge/llm-files",
     },
     {
       name: "Chains",

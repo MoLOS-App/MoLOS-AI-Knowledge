@@ -1,12 +1,12 @@
 import { desc, eq } from "drizzle-orm";
 import { usageAnalytics } from "$lib/server/db/schema/external_modules/MoLOS-AI-Knowledge/tables";
 import type { UsageAnalytic } from "$lib/models/external_modules/MoLOS-AI-Knowledge";
-import { BaseRepository } from "$lib/repositories/base-repository";
+import { BaseRepository } from "./base-repository";
 import { toJsonString } from "./utils";
 
 export class UsageAnalyticsRepository extends BaseRepository {
   private mapRow(row: typeof usageAnalytics.$inferSelect): UsageAnalytic {
-    return { ...row };
+    return { ...row, entityId: row.entityId ?? undefined };
   }
 
   async listByUserId(userId: string, limit = 50): Promise<UsageAnalytic[]> {

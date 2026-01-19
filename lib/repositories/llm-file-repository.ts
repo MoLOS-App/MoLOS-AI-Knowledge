@@ -9,7 +9,7 @@ import type {
   LlmFileVersion,
   UpdateLlmFileInput,
 } from "$lib/models/external_modules/MoLOS-AI-Knowledge";
-import { BaseRepository } from "$lib/repositories/base-repository";
+import { BaseRepository } from "./base-repository";
 
 export class LlmFileRepository extends BaseRepository {
   private mapFile(row: typeof llmFiles.$inferSelect): LlmFile {
@@ -17,7 +17,11 @@ export class LlmFileRepository extends BaseRepository {
   }
 
   private mapVersion(row: typeof llmFileVersions.$inferSelect): LlmFileVersion {
-    return { ...row };
+    return {
+      ...row,
+      label: row.label ?? undefined,
+      commitMessage: row.commitMessage ?? undefined,
+    };
   }
 
   async listByUserId(userId: string): Promise<LlmFile[]> {
@@ -42,19 +46,34 @@ export class LlmFileRepository extends BaseRepository {
 
   async create(data: CreateLlmFileInput, userId: string): Promise<LlmFile> {
     return this.db.transaction((tx) => {
+      const id = crypto.randomUUID();
+      const now = Math.floor(Date.now() / 1000);
       const inserted = tx
         .insert(llmFiles)
         .values({
+          id,
           userId,
           title: data.title,
           filename: data.filename,
         })
-        .returning();
+        .returning()
+        .all();
 
-      const fileRow = inserted[0];
+      const fileRow =
+        inserted[0] ??
+        ({
+          id,
+          userId,
+          title: data.title,
+          filename: data.filename,
+          currentVersion: 1,
+          isDeleted: false,
+          createdAt: now,
+          updatedAt: now,
+        } as typeof llmFiles.$inferSelect);
 
       tx.insert(llmFileVersions).values({
-        llmFileId: fileRow.id,
+        llmFileId: fileRow.id ?? id,
         userId,
         versionNumber: 1,
         content: data.content,
@@ -77,7 +96,8 @@ export class LlmFileRepository extends BaseRepository {
         .select()
         .from(llmFiles)
         .where(and(eq(llmFiles.id, id), eq(llmFiles.userId, userId)))
-        .limit(1);
+        .limit(1)
+        .all();
 
       if (!existing[0]) return null;
 
@@ -97,7 +117,8 @@ export class LlmFileRepository extends BaseRepository {
             and(eq(llmFileVersions.llmFileId, id), eq(llmFileVersions.userId, userId)),
           )
           .orderBy(desc(llmFileVersions.versionNumber))
-          .limit(1);
+          .limit(1)
+          .all();
 
         const nextVersion = (latestVersion[0]?.versionNumber ?? 0) + 1;
 
@@ -118,9 +139,17 @@ export class LlmFileRepository extends BaseRepository {
         .update(llmFiles)
         .set(updateData)
         .where(and(eq(llmFiles.id, id), eq(llmFiles.userId, userId)))
-        .returning();
+        .returning()
+        .all();
 
-      return updated[0] ? this.mapFile(updated[0]) : null;
+      const updatedRow =
+        updated[0] ??
+        ({
+          ...existing[0],
+          ...updateData,
+        } as typeof llmFiles.$inferSelect);
+
+      return updatedRow ? this.mapFile(updatedRow) : null;
     });
   }
 
