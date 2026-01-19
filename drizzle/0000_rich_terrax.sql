@@ -12,6 +12,17 @@ CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_ab_tests` (
 
 --> statement-breakpoint
 
+CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_ai_provider_settings` (
+	`user_id` text PRIMARY KEY NOT NULL,
+	`provider` text CHECK(provider IN ('openai', 'anthropic', 'openrouter', 'xai')) DEFAULT 'openai' NOT NULL,
+	`api_token` text DEFAULT '' NOT NULL,
+	`preconfigured_models_json` text DEFAULT '[]' NOT NULL,
+	`created_at` integer DEFAULT (strftime('%s','now')) NOT NULL,
+	`updated_at` integer DEFAULT (strftime('%s','now')) NOT NULL
+);
+
+--> statement-breakpoint
+
 CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_humanizer_jobs` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
@@ -46,7 +57,6 @@ CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_llm_files` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`title` text NOT NULL,
-	`filename` text NOT NULL,
 	`current_version` integer DEFAULT 1 NOT NULL,
 	`is_deleted` integer DEFAULT false NOT NULL,
 	`created_at` integer DEFAULT (strftime('%s','now')) NOT NULL,
@@ -59,7 +69,7 @@ CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_playground_sessions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`user_id` text NOT NULL,
 	`prompt_id` text,
-	`model` text CHECK(model IN ('gpt-4', 'gpt-4-turbo', 'claude-sonnet-4-5', 'claude-haiku-4-5', 'gemini-pro')) DEFAULT 'gpt-4' NOT NULL,
+	`model` text DEFAULT 'gpt-4' NOT NULL,
 	`settings_json` text DEFAULT '{}' NOT NULL,
 	`messages_json` text DEFAULT '[]' NOT NULL,
 	`total_tokens` integer DEFAULT 0 NOT NULL,
@@ -116,48 +126,10 @@ CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_prompts` (
 	`title` text NOT NULL,
 	`description` text,
 	`content` text NOT NULL,
-	`category` text CHECK(category IN ('Writing', 'Code Review', 'Analysis', 'Customer Support', 'Data Processing', 'General')) DEFAULT 'General' NOT NULL,
-	`model_target` text CHECK(model_target IN ('gpt-4', 'gpt-4-turbo', 'claude-sonnet-4-5', 'claude-haiku-4-5', 'gemini-pro')) DEFAULT 'gpt-4' NOT NULL,
 	`tags` text DEFAULT '[]' NOT NULL,
-	`is_favorite` integer DEFAULT false NOT NULL,
-	`is_private` integer DEFAULT false NOT NULL,
 	`is_deleted` integer DEFAULT false NOT NULL,
 	`created_at` integer DEFAULT (strftime('%s','now')) NOT NULL,
 	`updated_at` integer DEFAULT (strftime('%s','now')) NOT NULL
-);
-
---> statement-breakpoint
-
-CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_shared_libraries` (
-	`id` text PRIMARY KEY NOT NULL,
-	`owner_user_id` text NOT NULL,
-	`name` text NOT NULL,
-	`description` text,
-	`is_private` integer DEFAULT true NOT NULL,
-	`created_at` integer DEFAULT (strftime('%s','now')) NOT NULL,
-	`updated_at` integer DEFAULT (strftime('%s','now')) NOT NULL
-);
-
---> statement-breakpoint
-
-CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_shared_library_members` (
-	`id` text PRIMARY KEY NOT NULL,
-	`library_id` text NOT NULL,
-	`user_id` text NOT NULL,
-	`role` text CHECK(role IN ('viewer', 'editor', 'admin')) DEFAULT 'viewer' NOT NULL,
-	`created_at` integer DEFAULT (strftime('%s','now')) NOT NULL,
-	FOREIGN KEY (`library_id`) REFERENCES `MoLOS-AI-Knowledge_shared_libraries`(`id`)  ON DELETE cascade
-);
-
---> statement-breakpoint
-
-CREATE TABLE IF NOT EXISTS `MoLOS-AI-Knowledge_shared_library_prompts` (
-	`id` text PRIMARY KEY NOT NULL,
-	`library_id` text NOT NULL,
-	`prompt_id` text NOT NULL,
-	`created_at` integer DEFAULT (strftime('%s','now')) NOT NULL,
-	FOREIGN KEY (`library_id`) REFERENCES `MoLOS-AI-Knowledge_shared_libraries`(`id`)  ON DELETE cascade,
-	FOREIGN KEY (`prompt_id`) REFERENCES `MoLOS-AI-Knowledge_prompts`(`id`)  ON DELETE cascade
 );
 
 --> statement-breakpoint

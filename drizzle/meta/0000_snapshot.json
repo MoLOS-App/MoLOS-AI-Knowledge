@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "d2d765e4-4662-4582-9665-bb3540fc92e1",
+  "id": "1bbaa0a4-0c70-45a3-a1f1-2a6bb517b2f3",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "MoLOS-AI-Knowledge_ab_tests": {
@@ -59,6 +59,63 @@
           "notNull": true,
           "autoincrement": false,
           "default": "'draft'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%s','now'))"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(strftime('%s','now'))"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "MoLOS-AI-Knowledge_ai_provider_settings": {
+      "name": "MoLOS-AI-Knowledge_ai_provider_settings",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "provider": {
+          "name": "provider",
+          "type": "text CHECK(provider IN ('openai', 'anthropic', 'openrouter', 'xai'))",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'openai'"
+        },
+        "api_token": {
+          "name": "api_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "preconfigured_models_json": {
+          "name": "preconfigured_models_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'[]'"
         },
         "created_at": {
           "name": "created_at",
@@ -282,13 +339,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "filename": {
-          "name": "filename",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "current_version": {
           "name": "current_version",
           "type": "integer",
@@ -354,7 +404,7 @@
         },
         "model": {
           "name": "model",
-          "type": "text CHECK(model IN ('gpt-4', 'gpt-4-turbo', 'claude-sonnet-4-5', 'claude-haiku-4-5', 'gemini-pro'))",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
@@ -678,22 +728,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "category": {
-          "name": "category",
-          "type": "text CHECK(category IN ('Writing', 'Code Review', 'Analysis', 'Customer Support', 'Data Processing', 'General'))",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'General'"
-        },
-        "model_target": {
-          "name": "model_target",
-          "type": "text CHECK(model_target IN ('gpt-4', 'gpt-4-turbo', 'claude-sonnet-4-5', 'claude-haiku-4-5', 'gemini-pro'))",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'gpt-4'"
-        },
         "tags": {
           "name": "tags",
           "type": "text",
@@ -701,22 +735,6 @@
           "notNull": true,
           "autoincrement": false,
           "default": "'[]'"
-        },
-        "is_favorite": {
-          "name": "is_favorite",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": false
-        },
-        "is_private": {
-          "name": "is_private",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": false
         },
         "is_deleted": {
           "name": "is_deleted",
@@ -745,195 +763,6 @@
       },
       "indexes": {},
       "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "MoLOS-AI-Knowledge_shared_libraries": {
-      "name": "MoLOS-AI-Knowledge_shared_libraries",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "owner_user_id": {
-          "name": "owner_user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "is_private": {
-          "name": "is_private",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(strftime('%s','now'))"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(strftime('%s','now'))"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "MoLOS-AI-Knowledge_shared_library_members": {
-      "name": "MoLOS-AI-Knowledge_shared_library_members",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "library_id": {
-          "name": "library_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "role": {
-          "name": "role",
-          "type": "text CHECK(role IN ('viewer', 'editor', 'admin'))",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'viewer'"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(strftime('%s','now'))"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "MoLOS-AI-Knowledge_shared_library_members_library_id_MoLOS-AI-Knowledge_shared_libraries_id_fk": {
-          "name": "MoLOS-AI-Knowledge_shared_library_members_library_id_MoLOS-AI-Knowledge_shared_libraries_id_fk",
-          "tableFrom": "MoLOS-AI-Knowledge_shared_library_members",
-          "tableTo": "MoLOS-AI-Knowledge_shared_libraries",
-          "columnsFrom": [
-            "library_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "MoLOS-AI-Knowledge_shared_library_prompts": {
-      "name": "MoLOS-AI-Knowledge_shared_library_prompts",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "library_id": {
-          "name": "library_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "prompt_id": {
-          "name": "prompt_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(strftime('%s','now'))"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "MoLOS-AI-Knowledge_shared_library_prompts_library_id_MoLOS-AI-Knowledge_shared_libraries_id_fk": {
-          "name": "MoLOS-AI-Knowledge_shared_library_prompts_library_id_MoLOS-AI-Knowledge_shared_libraries_id_fk",
-          "tableFrom": "MoLOS-AI-Knowledge_shared_library_prompts",
-          "tableTo": "MoLOS-AI-Knowledge_shared_libraries",
-          "columnsFrom": [
-            "library_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "MoLOS-AI-Knowledge_shared_library_prompts_prompt_id_MoLOS-AI-Knowledge_prompts_id_fk": {
-          "name": "MoLOS-AI-Knowledge_shared_library_prompts_prompt_id_MoLOS-AI-Knowledge_prompts_id_fk",
-          "tableFrom": "MoLOS-AI-Knowledge_shared_library_prompts",
-          "tableTo": "MoLOS-AI-Knowledge_prompts",
-          "columnsFrom": [
-            "prompt_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}

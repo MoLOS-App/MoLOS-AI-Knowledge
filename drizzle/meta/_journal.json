@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1768734503964,
-      "tag": "0000_loud_thunderbolt_ross",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1768816634691,
-      "tag": "0001_bright_quasimodo",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1768851881074,
-      "tag": "0002_familiar_cassandra_nova",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1768852588034,
-      "tag": "0003_tearful_jetstream",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1768853157139,
-      "tag": "0004_clever_edwin_jarvis",
+      "when": 1768858037889,
+      "tag": "0000_rich_terrax",
       "breakpoints": true
     }
   ]
