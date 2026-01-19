@@ -3,15 +3,13 @@
 	import {
 		createPrompt,
 		updatePrompt,
-		deletePromptVersion
+		deletePromptVersion,
+		deletePrompt
 	} from '$lib/stores/external_modules/MoLOS-AI-Knowledge/api';
-	import {
-		ModelTarget,
-		PromptCategory,
-		type PromptVersion
-	} from '$lib/models/external_modules/MoLOS-AI-Knowledge';
+	import { type PromptVersion } from '$lib/models/external_modules/MoLOS-AI-Knowledge';
 	import type { PageData } from './$types';
 	import { toast } from 'svelte-sonner';
+	import { fade, fly } from 'svelte/transition';
 	import {
 		Dialog,
 		DialogContent,
@@ -35,10 +33,6 @@
 	let promptDescription = '';
 	let promptContent = '';
 	let promptTags = '';
-	let promptCategory: PromptCategory = PromptCategory.GENERAL;
-	let promptModel: ModelTarget = ModelTarget.GPT_4;
-	let promptFavorite = false;
-	let promptPrivate = false;
 	let promptCommit = '';
 
 	let activeVersion: PromptVersion | null = null;
@@ -46,19 +40,13 @@
 	let versionModalOpen = false;
 	let versionsOpen = false;
 	let displayTitle = 'New prompt';
-
-	const categoryOptions = Object.values(PromptCategory);
-	const modelOptions = Object.values(ModelTarget);
+	let currentVersion = 1;
 
 	const resetForm = () => {
 		promptTitle = '';
 		promptDescription = '';
 		promptContent = '';
 		promptTags = '';
-		promptCategory = PromptCategory.GENERAL;
-		promptModel = ModelTarget.GPT_4;
-		promptFavorite = false;
-		promptPrivate = false;
 		promptCommit = '';
 		activeVersion = null;
 	};
@@ -69,10 +57,6 @@
 		promptDescription = data.prompt.description ?? '';
 		promptContent = data.prompt.content;
 		promptTags = data.prompt.tags.join(', ');
-		promptCategory = data.prompt.category;
-		promptModel = data.prompt.modelTarget;
-		promptFavorite = data.prompt.isFavorite;
-		promptPrivate = data.prompt.isPrivate;
 		promptCommit = '';
 		activeVersion = null;
 	};
@@ -91,6 +75,7 @@
 		hydrateForm();
 	}
 	$: displayTitle = promptTitle.trim() || (isNew ? 'New prompt' : 'Untitled prompt');
+	$: currentVersion = data.versions?.[0]?.versionNumber ?? 1;
 
 	const savePrompt = async () => {
 		if (!promptTitle.trim() || !promptContent.trim()) {
@@ -108,11 +93,7 @@
 			title: promptTitle.trim(),
 			description: promptDescription.trim() || undefined,
 			content: promptContent.trim(),
-			category: promptCategory,
-			modelTarget: promptModel,
 			tags,
-			isFavorite: promptFavorite,
-			isPrivate: promptPrivate,
 			commitMessage
 		};
 
@@ -142,6 +123,24 @@
 	const viewVersion = (version: PromptVersion) => {
 		activeVersion = version;
 		versionModalOpen = true;
+	};
+
+	const sharePrompt = () => {
+		if (!promptId) return;
+		goto(`/ui/MoLOS-AI-Knowledge/prompts/${promptId}/share`);
+	};
+
+	const deletePromptItem = async () => {
+		if (!promptId) return;
+		if (!confirm('Delete this prompt and all versions?')) return;
+		try {
+			await deletePrompt(promptId);
+			toast.success('Prompt deleted');
+			await invalidateAll();
+			goto('/ui/MoLOS-AI-Knowledge/prompts');
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : 'Failed to delete prompt');
+		}
 	};
 
 	const restoreVersion = async (version: PromptVersion) => {
@@ -183,50 +182,36 @@
 		});
 </script>
 
-<section class="space-y-6">
-	<header class="rounded-[28px] border bg-card/80 p-6 shadow-sm">
+<section class="space-y-6" in:fade={{ duration: 180 }}>
+	<header class="rounded-[28px] border bg-card/80 p-6 shadow-sm" in:fly={{ y: 12, duration: 220 }}>
 		<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 			<div class="space-y-2">
 				<input
-					class="w-full border-transparent bg-transparent text-2xl font-semibold tracking-tight outline-none placeholder:text-muted-foreground focus:border-b focus:border-foreground/20 sm:max-w-2xl"
+					class="w-full bg-transparent text-2xl font-semibold tracking-tight outline-none placeholder:text-muted-foreground border-b focus:border-foreground border-foreground/20 sm:max-w-2xl"
 					bind:value={promptTitle}
 					placeholder="Untitled prompt"
 				/>
 				<textarea
-					class="w-full resize-none border-transparent bg-transparent text-sm text-muted-foreground outline-none placeholder:text-muted-foreground focus:border-b focus:border-foreground/20 sm:max-w-2xl"
+					class="w-full resize-none bg-transparent text-sm text-muted-foreground outline-none placeholder:text-muted-foreground border-b focus:border-foreground border-foreground/20 sm:max-w-2xl"
 					bind:value={promptDescription}
 					placeholder="Add a short description"
-					rows={2}
+					rows={1}
 				></textarea>
 			</div>
 			<div class="flex flex-wrap items-center gap-3 sm:justify-end">
 				<button
-					class="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background"
-					on:click={savePrompt}
-				>
-					{isNew ? 'Create prompt' : 'Save changes'}
-				</button>
-				<button
-					class="rounded-full border px-4 py-2 text-xs font-semibold"
+					class="rounded-full border px-4 py-2 text-md font-semibold"
 					on:click={() => goto('/ui/MoLOS-AI-Knowledge/prompts')}
 				>
 					Go back
-				</button>
-				<button
-					class="rounded-full border px-4 py-2 text-xs font-semibold"
-					on:click={() => {
-						versionsOpen = true;
-					}}
-				>
-					Versions
 				</button>
 			</div>
 		</div>
 	</header>
 
-	<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+	<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]" in:fade={{ duration: 180 }}>
 		<div class="space-y-6">
-			<section class="rounded-[28px] border bg-card/80 p-6 shadow-sm">
+			<section class="rounded-[28px] border bg-card/80 p-6 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
 				<div class="flex items-center justify-between">
 					<h3 class="text-sm font-semibold">Prompt content</h3>
 					<span class="text-xs text-muted-foreground">Main draft</span>
@@ -240,37 +225,58 @@
 		</div>
 
 		<aside class="space-y-4">
-			<section class="rounded-[28px] border bg-card/80 p-5 shadow-sm">
-				<h3 class="text-sm font-semibold">Publishing</h3>
+
+			<div class="rounded-[28px] border bg-card/80 p-5 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
+				<h3 class="text-sm font-semibold">Commit</h3>
 				<div class="mt-4 grid gap-3">
-					<select class="h-10 rounded-md border bg-background px-3 text-sm" bind:value={promptCategory}>
-						{#each categoryOptions as option}
-							<option value={option}>{option}</option>
-						{/each}
-					</select>
-					<select class="h-10 rounded-md border bg-background px-3 text-sm" bind:value={promptModel}>
-						{#each modelOptions as option}
-							<option value={option}>{option}</option>
-						{/each}
-					</select>
-					<div class="flex flex-wrap gap-4 text-sm">
-						<label class="flex items-center gap-2">
-							<input type="checkbox" bind:checked={promptPrivate} /> Private
-						</label>
-						<label class="flex items-center gap-2">
-							<input type="checkbox" bind:checked={promptFavorite} /> Favorite
-						</label>
-					</div>
+					<input
+						class="h-10 w-full rounded-md border bg-background px-3 text-sm"
+						bind:value={promptCommit}
+						placeholder="Commit message (optional)"
+					/>
+					<button
+						class="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background"
+						on:click={savePrompt}
+					>
+						{isNew ? 'Create prompt' : 'Save changes'}
+					</button>
 				</div>
+			</div>
+
+			<section class="rounded-[28px] border bg-card/80 p-5 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
+				<h3 class="text-sm font-semibold">Version</h3>
+				<div class="mt-4 flex items-center justify-between text-sm">
+					<div class="text-xs text-muted-foreground">Current</div>
+					<div class="text-sm font-semibold">v{currentVersion}</div>
+				</div>
+				<button
+					class="mt-4 w-full rounded-full border px-3 py-2 text-xs font-semibold"
+					on:click={() => {
+						versionsOpen = true;
+					}}
+				>
+					Show versions
+				</button>
 			</section>
 
-			<section class="rounded-[28px] border bg-card/80 p-5 shadow-sm">
-				<h3 class="text-sm font-semibold">Labels</h3>
-				<input
-					class="mt-4 h-10 w-full rounded-md border bg-background px-3 text-sm"
-					bind:value={promptTags}
-					placeholder="Tags (comma separated)"
-				/>
+			<section class="rounded-[28px] border bg-card/80 p-5 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
+				<h3 class="text-sm font-semibold">Actions</h3>
+				<div class="mt-4 flex flex-col gap-2">
+					<button
+						class="rounded-full border px-3 py-2 text-xs font-semibold"
+						on:click={sharePrompt}
+						disabled={!promptId}
+					>
+						Share prompt
+					</button>
+					<button
+						class="rounded-full border px-3 py-2 text-xs font-semibold text-destructive"
+						on:click={deletePromptItem}
+						disabled={!promptId}
+					>
+						Delete prompt
+					</button>
+				</div>
 			</section>
 
 		</aside>

@@ -20,6 +20,7 @@
 	} from '$lib/components/ui/sheet';
 	import type { LlmFileVersion } from '$lib/models/external_modules/MoLOS-AI-Knowledge';
 	import type { PageData } from './$types';
+	import { fade, fly } from 'svelte/transition';
 
 	export let data: PageData;
 
@@ -28,7 +29,6 @@
 	let lastLoadedId: string | null = null;
 
 	let llmTitle = '';
-	let llmFilename = 'llm.txt';
 	let llmContent = '';
 	let llmLabel = '';
 	let llmCommit = '';
@@ -38,10 +38,10 @@
 	let versionModalOpen = false;
 	let versionsOpen = false;
 	let displayTitle = 'New LLM.txt';
+	let currentVersion = 1;
 
 	const resetForm = () => {
 		llmTitle = '';
-		llmFilename = 'llm.txt';
 		llmContent = '';
 		llmLabel = '';
 		llmCommit = '';
@@ -52,7 +52,6 @@
 		if (!data.file) return;
 		const latestVersion = data.versions[0];
 		llmTitle = data.file.title;
-		llmFilename = data.file.filename;
 		llmContent = latestVersion?.content ?? '';
 		llmLabel = latestVersion?.label ?? '';
 		llmCommit = '';
@@ -73,6 +72,7 @@
 		hydrateForm();
 	}
 	$: displayTitle = llmTitle.trim() || (isNew ? 'New LLM.txt' : 'Untitled LLM.txt');
+	$: currentVersion = data.versions?.[0]?.versionNumber ?? 1;
 
 	const saveLlmFile = async () => {
 		if (!llmTitle.trim() || !llmContent.trim()) {
@@ -83,7 +83,6 @@
 		const commitMessage = llmCommit.trim() || new Date().toLocaleString();
 		const payload = {
 			title: llmTitle.trim(),
-			filename: llmFilename.trim(),
 			content: llmContent.trim(),
 			label: llmLabel.trim() || undefined,
 			commitMessage
@@ -115,6 +114,33 @@
 	const viewVersion = (version: LlmFileVersion) => {
 		activeVersion = version;
 		versionModalOpen = true;
+	};
+
+	const shareLlmFile = async () => {
+		if (!fileId) return;
+		const shareUrl =
+			typeof window !== 'undefined'
+				? `${window.location.origin}/ui/MoLOS-AI-Knowledge/prompts/llm/${fileId}`
+				: `/ui/MoLOS-AI-Knowledge/prompts/llm/${fileId}`;
+		try {
+			await navigator.clipboard.writeText(shareUrl);
+			toast.success('Share link copied');
+		} catch {
+			toast.error('Failed to copy share link');
+		}
+	};
+
+	const deleteLlmFile = async () => {
+		if (!fileId) return;
+		if (!confirm('Delete this LLM.txt file and all versions?')) return;
+		try {
+			await updateLlmFile(fileId, { isDeleted: true });
+			toast.success('LLM.txt deleted');
+			await invalidateAll();
+			goto('/ui/MoLOS-AI-Knowledge/prompts');
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : 'Failed to delete LLM.txt');
+		}
 	};
 
 	const restoreVersion = async (version: LlmFileVersion) => {
@@ -158,59 +184,36 @@
 		});
 </script>
 
-<section class="space-y-6">
-	<header class="rounded-[28px] border bg-card/80 p-6 shadow-sm">
+<section class="space-y-6" in:fade={{ duration: 180 }}>
+	<header class="rounded-[28px] border bg-card/80 p-6 shadow-sm" in:fly={{ y: 12, duration: 220 }}>
 		<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 			<div class="space-y-2">
-				<div class="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-					Knowledge prompts
-				</div>
-				<h2 class="text-2xl font-semibold tracking-tight">{displayTitle}</h2>
-				<p class="text-sm text-muted-foreground">
-					{isNew
-						? 'Create a fresh instruction file and save your first version.'
-						: 'Edit instructions, review versions, and restore content.'}
-				</p>
+				<input
+					class="w-full border-transparent bg-transparent text-2xl font-semibold tracking-tight outline-none placeholder:text-muted-foreground focus:border-b focus:border-foreground/20 sm:max-w-2xl"
+					bind:value={llmTitle}
+					placeholder="Untitled LLM.txt"
+				/>
+				<textarea
+					class="w-full resize-none border-transparent bg-transparent text-sm text-muted-foreground outline-none placeholder:text-muted-foreground focus:border-b focus:border-foreground/20 sm:max-w-2xl"
+					bind:value={llmLabel}
+					placeholder="Add a short description"
+					rows={2}
+				></textarea>
 			</div>
 			<div class="flex flex-wrap items-center gap-3 sm:justify-end">
-				<button
-					class="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background"
-					on:click={saveLlmFile}
-				>
-					{isNew ? 'Create LLM.txt' : 'Save changes'}
-				</button>
 				<button
 					class="rounded-full border px-4 py-2 text-xs font-semibold"
 					on:click={() => goto('/ui/MoLOS-AI-Knowledge/prompts')}
 				>
 					Go back
 				</button>
-				<button
-					class="rounded-full border px-4 py-2 text-xs font-semibold"
-					on:click={() => {
-						versionsOpen = true;
-					}}
-				>
-					Versions
-				</button>
 			</div>
 		</div>
 	</header>
 
-	<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+	<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]" in:fade={{ duration: 180 }}>
 		<div class="space-y-6">
-			<section class="rounded-[28px] border bg-card/80 p-6 shadow-sm">
-				<h3 class="text-sm font-semibold">File details</h3>
-				<div class="mt-4 grid gap-4">
-					<input
-						class="h-10 rounded-md border bg-background px-3 text-sm"
-						bind:value={llmTitle}
-						placeholder="Title"
-					/>
-				</div>
-			</section>
-
-			<section class="rounded-[28px] border bg-card/80 p-6 shadow-sm">
+			<section class="rounded-[28px] border bg-card/80 p-6 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
 				<div class="flex items-center justify-between">
 					<h3 class="text-sm font-semibold">LLM.txt content</h3>
 					<span class="text-xs text-muted-foreground">Main draft</span>
@@ -224,19 +227,56 @@
 		</div>
 
 		<aside class="space-y-4">
-			<section class="rounded-[28px] border bg-card/80 p-5 shadow-sm">
-				<h3 class="text-sm font-semibold">File metadata</h3>
+			<section class="rounded-[28px] border bg-card/80 p-5 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
+				<h3 class="text-sm font-semibold">Version</h3>
+				<div class="mt-4 flex items-center justify-between text-sm">
+					<div class="text-xs text-muted-foreground">Current</div>
+					<div class="text-sm font-semibold">v{currentVersion}</div>
+				</div>
+				<button
+					class="mt-4 w-full rounded-full border px-3 py-2 text-xs font-semibold"
+					on:click={() => {
+						versionsOpen = true;
+					}}
+				>
+					Show versions
+				</button>
+			</section>
+
+			<div class="rounded-[28px] border bg-card/80 p-5 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
+				<h3 class="text-sm font-semibold">Commit</h3>
 				<div class="mt-4 grid gap-3">
 					<input
-						class="h-10 rounded-md border bg-background px-3 text-sm"
-						bind:value={llmFilename}
-						placeholder="Filename"
+						class="h-10 w-full rounded-md border bg-background px-3 text-sm"
+						bind:value={llmCommit}
+						placeholder="Commit message (optional)"
 					/>
-					<input
-						class="h-10 rounded-md border bg-background px-3 text-sm"
-						bind:value={llmLabel}
-						placeholder="Label"
-					/>
+					<button
+						class="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background"
+						on:click={saveLlmFile}
+					>
+						{isNew ? 'Create LLM.txt' : 'Save changes'}
+					</button>
+				</div>
+			</div>
+
+			<section class="rounded-[28px] border bg-card/80 p-5 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
+				<h3 class="text-sm font-semibold">Actions</h3>
+				<div class="mt-4 flex flex-col gap-2">
+					<button
+						class="rounded-full border px-3 py-2 text-xs font-semibold"
+						on:click={shareLlmFile}
+						disabled={!fileId}
+					>
+						Share LLM.txt
+					</button>
+					<button
+						class="rounded-full border px-3 py-2 text-xs font-semibold text-destructive"
+						on:click={deleteLlmFile}
+						disabled={!fileId}
+					>
+						Delete LLM.txt
+					</button>
 				</div>
 			</section>
 

@@ -2,21 +2,13 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { z } from "zod";
 import { PromptRepository } from "$lib/repositories/external_modules/MoLOS-AI-Knowledge/prompt-repository";
-import {
-  ModelTarget,
-  PromptCategory,
-} from "$lib/models/external_modules/MoLOS-AI-Knowledge";
 import { db } from "$lib/server/db";
 
 const UpdatePromptSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().optional(),
   content: z.string().min(1).optional(),
-  category: z.nativeEnum(PromptCategory).optional(),
-  modelTarget: z.nativeEnum(ModelTarget).optional(),
   tags: z.array(z.string()).max(10).optional(),
-  isFavorite: z.boolean().optional(),
-  isPrivate: z.boolean().optional(),
   isDeleted: z.boolean().optional(),
   commitMessage: z.string().optional(),
 });

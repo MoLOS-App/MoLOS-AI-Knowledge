@@ -6,10 +6,18 @@ import { db } from "$lib/server/db";
 
 const CreateSchema = z.object({
   title: z.string().min(1),
-  filename: z.string().min(1),
   content: z.string().min(1),
   label: z.string().optional(),
   commitMessage: z.string().optional(),
+});
+
+const UpdateSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1).optional(),
+  content: z.string().min(1).optional(),
+  label: z.string().optional(),
+  commitMessage: z.string().optional(),
+  isDeleted: z.boolean().optional(),
 });
 
 export const GET: RequestHandler = async ({ locals }) => {
@@ -36,4 +44,16 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   const file = await repo.create(payload, userId);
   console.log("[MoLOS-AI-Knowledge][llm-files][POST] created", file.id);
   return json(file, { status: 201 });
+};
+
+export const PUT: RequestHandler = async ({ locals, request }) => {
+  const userId = locals.user?.id;
+  if (!userId) throw error(401, "Unauthorized");
+
+  const payload = UpdateSchema.parse(await request.json());
+  const { id, ...updates } = payload;
+  const repo = new LlmFileRepository(db);
+  const file = await repo.update(id, userId, updates);
+  if (!file) throw error(404, "File not found");
+  return json(file);
 };

@@ -2,7 +2,6 @@ import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 import { textEnum } from "$lib/server/db/utils";
 import {
-  PromptCategory,
   ModelTarget,
   HumanizationLevel,
   HumanizationTone,
@@ -18,19 +17,7 @@ export const prompts = sqliteTable("MoLOS-AI-Knowledge_prompts", {
   title: text("title").notNull(),
   description: text("description"),
   content: text("content").notNull(),
-  category: textEnum("category", PromptCategory)
-    .notNull()
-    .default(PromptCategory.GENERAL),
-  modelTarget: textEnum("model_target", ModelTarget)
-    .notNull()
-    .default(ModelTarget.GPT_4),
   tags: text("tags").notNull().default("[]"),
-  isFavorite: integer("is_favorite", { mode: "boolean" })
-    .notNull()
-    .default(false),
-  isPrivate: integer("is_private", { mode: "boolean" })
-    .notNull()
-    .default(false),
   isDeleted: integer("is_deleted", { mode: "boolean" })
     .notNull()
     .default(false),
@@ -55,7 +42,6 @@ export const llmFiles = sqliteTable("MoLOS-AI-Knowledge_llm_files", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id").notNull(),
   title: text("title").notNull(),
-  filename: text("filename").notNull(),
   currentVersion: integer("current_version").notNull().default(1),
   isDeleted: integer("is_deleted", { mode: "boolean" })
     .notNull()

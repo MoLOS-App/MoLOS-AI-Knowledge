@@ -1,12 +1,3 @@
-export const PromptCategory = {
-  WRITING: "Writing",
-  CODE_REVIEW: "Code Review",
-  ANALYSIS: "Analysis",
-  CUSTOMER_SUPPORT: "Customer Support",
-  DATA_PROCESSING: "Data Processing",
-  GENERAL: "General",
-} as const;
-
 export const ModelTarget = {
   GPT_4: "gpt-4",
   GPT_4_TURBO: "gpt-4-turbo",
@@ -47,11 +38,7 @@ export interface Prompt {
   title: string;
   description?: string;
   content: string;
-  category: PromptCategory;
-  modelTarget: ModelTarget;
   tags: string[];
-  isFavorite: boolean;
-  isPrivate: boolean;
   isDeleted: boolean;
   createdAt: number;
   updatedAt: number;
@@ -72,7 +59,6 @@ export interface LlmFile {
   id: string;
   userId: string;
   title: string;
-  filename: string;
   currentVersion: number;
   isDeleted: boolean;
   createdAt: number;
@@ -161,7 +147,6 @@ export interface PromptDeployment {
   createdAt: number;
 }
 
-export type PromptCategory = (typeof PromptCategory)[keyof typeof PromptCategory];
 export type ModelTarget = (typeof ModelTarget)[keyof typeof ModelTarget];
 export type HumanizationLevel =
   (typeof HumanizationLevel)[keyof typeof HumanizationLevel];

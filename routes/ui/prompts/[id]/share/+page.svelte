@@ -1,23 +1,16 @@
 <script lang="ts">
-	import { goto, invalidateAll } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import type { Prompt } from '$lib/models/external_modules/MoLOS-AI-Knowledge';
-	import { updatePrompt } from '$lib/stores/external_modules/MoLOS-AI-Knowledge/api';
 
 	export let data: { prompt: Prompt | null };
 
 	let prompt: Prompt | null = null;
 	let copied = false;
+	let shareUrl = '';
 
 	$: prompt = data.prompt;
 	$: shareUrl = `${$page.url.origin}${$page.url.pathname}`;
-	$: isPublic = prompt ? !prompt.isPrivate : false;
-
-	const toggleVisibility = async () => {
-		if (!prompt) return;
-		await updatePrompt(prompt.id, { isPrivate: prompt.isPrivate ? false : true });
-		await invalidateAll();
-	};
 
 	const copyLink = async () => {
 		if (!prompt) return;
@@ -41,7 +34,7 @@
 				<div>
 					<h2 class="text-2xl font-semibold tracking-tight">Share prompt</h2>
 					<p class="text-sm text-muted-foreground">
-						Control visibility and copy a share link for public prompts.
+						Copy a share link for this prompt.
 					</p>
 				</div>
 				<button
@@ -57,29 +50,11 @@
 					<div class="flex flex-wrap items-center justify-between gap-3">
 						<div>
 							<div class="text-sm font-semibold">{prompt.title}</div>
-							<div class="text-xs text-muted-foreground">
-								{prompt.category} • {prompt.modelTarget}
-							</div>
 						</div>
 						<div class="flex items-center gap-2 text-xs">
-							<span
-								class={`rounded-full px-3 py-1 ${
-									isPublic ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-100 text-amber-900'
-								}`}
-							>
-								{isPublic ? 'Public' : 'Private'}
-							</span>
-							<button
-								class="rounded-full border px-3 py-1"
-								onclick={toggleVisibility}
-							>
-								{isPublic ? 'Make private' : 'Make public'}
+							<button class="rounded-full border px-3 py-1" onclick={copyLink}>
+								{copied ? 'Copied' : 'Copy link'}
 							</button>
-							{#if isPublic}
-								<button class="rounded-full border px-3 py-1" onclick={copyLink}>
-									{copied ? 'Copied' : 'Copy link'}
-								</button>
-							{/if}
 						</div>
 					</div>
 					{#if prompt.description}

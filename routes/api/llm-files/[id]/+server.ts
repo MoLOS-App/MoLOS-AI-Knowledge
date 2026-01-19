@@ -6,7 +6,6 @@ import { db } from "$lib/server/db";
 
 const UpdateSchema = z.object({
   title: z.string().min(1).optional(),
-  filename: z.string().min(1).optional(),
   content: z.string().min(1).optional(),
   label: z.string().optional(),
   commitMessage: z.string().optional(),

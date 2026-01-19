@@ -54,7 +54,6 @@ export class LlmFileRepository extends BaseRepository {
           id,
           userId,
           title: data.title,
-          filename: data.filename,
         })
         .returning()
         .all();
@@ -65,7 +64,6 @@ export class LlmFileRepository extends BaseRepository {
           id,
           userId,
           title: data.title,
-          filename: data.filename,
           currentVersion: 1,
           isDeleted: false,
           createdAt: now,
@@ -80,7 +78,7 @@ export class LlmFileRepository extends BaseRepository {
         label: data.label,
         commitMessage: data.commitMessage,
         schemaValid: true,
-      });
+      }).run();
 
       return this.mapFile(fileRow);
     });
@@ -106,7 +104,6 @@ export class LlmFileRepository extends BaseRepository {
       };
 
       if (updates.title !== undefined) updateData.title = updates.title;
-      if (updates.filename !== undefined) updateData.filename = updates.filename;
       if (updates.isDeleted !== undefined) updateData.isDeleted = updates.isDeleted;
 
       if (updates.content !== undefined) {
@@ -130,7 +127,7 @@ export class LlmFileRepository extends BaseRepository {
           label: updates.label,
           commitMessage: updates.commitMessage,
           schemaValid: true,
-        });
+        }).run();
 
         updateData.currentVersion = nextVersion;
       }
@@ -161,5 +158,41 @@ export class LlmFileRepository extends BaseRepository {
       .orderBy(desc(llmFileVersions.versionNumber));
 
     return results.map((row) => this.mapVersion(row));
+  }
+
+  async deleteVersion(fileId: string, versionId: string, userId: string): Promise<number | null> {
+    return this.db.transaction((tx) => {
+      const versions = tx
+        .select()
+        .from(llmFileVersions)
+        .where(and(eq(llmFileVersions.llmFileId, fileId), eq(llmFileVersions.userId, userId)))
+        .orderBy(desc(llmFileVersions.versionNumber))
+        .all();
+
+      if (versions.length <= 1) return null;
+
+      const target = versions.find((version) => version.id === versionId);
+      if (!target) return null;
+
+      tx.delete(llmFileVersions).where(
+        and(
+          eq(llmFileVersions.id, versionId),
+          eq(llmFileVersions.llmFileId, fileId),
+          eq(llmFileVersions.userId, userId),
+        ),
+      );
+
+      const remaining = versions.filter((version) => version.id !== versionId);
+      const nextVersion = remaining[0]?.versionNumber ?? 1;
+
+      tx.update(llmFiles)
+        .set({
+          currentVersion: nextVersion,
+          updatedAt: Math.floor(Date.now() / 1000),
+        })
+        .where(and(eq(llmFiles.id, fileId), eq(llmFiles.userId, userId)));
+
+      return nextVersion;
+    });
   }
 }
