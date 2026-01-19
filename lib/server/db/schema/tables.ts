@@ -2,7 +2,6 @@ import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 import { textEnum } from "$lib/server/db/utils";
 import {
-  ModelTarget,
   AiProvider,
   HumanizationLevel,
   HumanizationTone,
@@ -76,7 +75,7 @@ export const playgroundSessions = sqliteTable(
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     userId: text("user_id").notNull(),
     promptId: text("prompt_id"),
-    model: text("model").notNull().default(ModelTarget.GPT_4),
+    model: text("model").notNull().default("gpt-4"),
     settingsJson: text("settings_json").notNull().default("{}"),
     messagesJson: text("messages_json").notNull().default("[]"),
     totalTokens: integer("total_tokens").notNull().default(0),

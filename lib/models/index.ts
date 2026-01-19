@@ -1,11 +1,3 @@
-export const ModelTarget = {
-  GPT_4: "gpt-4",
-  GPT_4_TURBO: "gpt-4-turbo",
-  CLAUDE_SONNET: "claude-sonnet-4-5",
-  CLAUDE_HAIKU: "claude-haiku-4-5",
-  GEMINI_PRO: "gemini-pro",
-} as const;
-
 export const AiProvider = {
   OPENAI: "openai",
   ANTHROPIC: "anthropic",
@@ -163,7 +155,6 @@ export interface PromptDeployment {
   createdAt: number;
 }
 
-export type ModelTarget = (typeof ModelTarget)[keyof typeof ModelTarget];
 export type AiProvider = (typeof AiProvider)[keyof typeof AiProvider];
 export type HumanizationLevel =
   (typeof HumanizationLevel)[keyof typeof HumanizationLevel];
