@@ -28,7 +28,6 @@ export const load: PageServerLoad = async ({ fetch }) => {
 		safeFetch<UsageAnalytic[]>(fetch, '/api/MoLOS-AI-Knowledge/analytics', [])
 	]);
 
-	const favorites = prompts.filter((prompt) => prompt.isFavorite).length;
 	const lastPrompt = prompts.reduce((latest, prompt) =>
 		!latest || prompt.updatedAt > latest ? prompt.updatedAt : latest
 	, 0);
@@ -53,7 +52,6 @@ export const load: PageServerLoad = async ({ fetch }) => {
 	return {
 		stats: {
 			promptsTotal: prompts.length,
-			favorites,
 			sessionsTotal: sessions.length,
 			jobsTotal: jobs.length,
 			lastActivity

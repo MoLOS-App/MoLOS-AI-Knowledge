@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { Send , Plus} from 'lucide-svelte';
 	import { invalidateAll } from '$app/navigation';
 	import {
 		createPlaygroundSession,
@@ -46,6 +47,13 @@
 	let playgroundLatency: number | null = null;
 	let playgroundCost = 0;
 	let playgroundTokenEstimate = 0;
+	let selectedSessionId = '';
+	let selectedSession: PlaygroundSession | null = null;
+	let deletedSessionIds = new Set<string>();
+	let renamedSessionTitles: Record<string, string> = {};
+	let editingSessionId = '';
+	let renameDraft = '';
+	let visibleSessions: PlaygroundSession[] = [];
 
 	const pricing: Record<string, { input: number; output: number }> = {
 		[ModelTarget.GPT_4]: { input: 0.03, output: 0.06 },
@@ -73,6 +81,12 @@
 		playgroundModel =
 			selectedModelId === 'custom' ? customModelId.trim() || fallbackModel : selectedModelId;
 	}
+
+	$: visibleSessions = sessions.filter((session) => !deletedSessionIds.has(session.id));
+
+	$: selectedSession = selectedSessionId
+		? visibleSessions.find((session) => session.id === selectedSessionId) ?? null
+		: null;
 
 	onMount(async () => {
 		try {
@@ -109,6 +123,80 @@
 		updateCostEstimate();
 	};
 
+	const startNewConversation = () => {
+		selectedSessionId = '';
+		editingSessionId = '';
+		playgroundMessages = [];
+		playgroundMessage = '';
+		playgroundLatency = null;
+		playgroundTokenEstimate = 0;
+		playgroundCost = 0;
+	};
+
+	const sessionTitle = (session: PlaygroundSession) =>
+		renamedSessionTitles[session.id] ?? promptLabel(session.promptId);
+
+	const beginRename = (session: PlaygroundSession) => {
+		editingSessionId = session.id;
+		renameDraft = sessionTitle(session);
+	};
+
+	const saveRename = (session: PlaygroundSession) => {
+		const nextTitle = renameDraft.trim() || promptLabel(session.promptId);
+		renamedSessionTitles = { ...renamedSessionTitles, [session.id]: nextTitle };
+		editingSessionId = '';
+		renameDraft = '';
+	};
+
+	const cancelRename = () => {
+		editingSessionId = '';
+		renameDraft = '';
+	};
+
+	const deleteSession = (session: PlaygroundSession) => {
+		const nextDeleted = new Set(deletedSessionIds);
+		nextDeleted.add(session.id);
+		deletedSessionIds = nextDeleted;
+		if (selectedSessionId === session.id) {
+			startNewConversation();
+		}
+	};
+
+	const selectSession = (session: PlaygroundSession) => {
+		selectedSessionId = session.id;
+		editingSessionId = '';
+		try {
+			const parsed = JSON.parse(session.messagesJson || '[]');
+			playgroundMessages = Array.isArray(parsed) ? parsed : [];
+		} catch {
+			playgroundMessages = [];
+		}
+		try {
+			const parsedSettings = JSON.parse(session.settingsJson || '{}');
+			playgroundTemp = parsedSettings.temperature ?? playgroundTemp;
+			playgroundTokens = parsedSettings.maxTokens ?? playgroundTokens;
+			playgroundTopP = parsedSettings.topP ?? playgroundTopP;
+			playgroundFrequency = parsedSettings.frequencyPenalty ?? playgroundFrequency;
+			playgroundPresence = parsedSettings.presencePenalty ?? playgroundPresence;
+		} catch {
+			// Ignore invalid settings payloads
+		}
+		if (session.model) {
+			if (modelOptions.includes(session.model)) {
+				selectedModelId = session.model;
+				customModelId = '';
+			} else {
+				selectedModelId = 'custom';
+				customModelId = session.model;
+			}
+		}
+		playgroundPromptId = session.promptId ?? '';
+		playgroundLatency = session.latencyMs ?? null;
+		playgroundTokenEstimate = session.totalTokens ?? 0;
+		playgroundCost = session.totalCost ?? 0;
+		playgroundMessage = '';
+	};
+
 	const savePlaygroundSession = async () => {
 		const payload = {
 			promptId: playgroundPromptId || undefined,
@@ -136,175 +224,264 @@
 	};
 </script>
 
-<div class="space-y-6">
-	<section class="rounded-2xl border bg-card p-6">
-		<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-			<div>
-				<h2 class="text-2xl font-semibold tracking-tight">Playground</h2>
-				<p class="text-sm text-muted-foreground">
-					Prototype prompt runs, tune settings, and save sessions.
-				</p>
-			</div>
-			<div class="text-xs text-muted-foreground">Cost estimates update as you type.</div>
+<div
+	class="grid h-full w-full grid-rows-[auto_minmax(0,1fr)_auto] gap-0 p-4 sm:p-6 lg:grid-cols-[260px_minmax(0,1fr)_420px] lg:grid-rows-1"
+>
+	<div
+		class="flex flex-col min-h-0 border rounded-b-none rounded-t-2xl bg-card lg:rounded-l-2xl lg:rounded-r-none lg:rounded-t-2xl"
+	>
+		<div
+			class="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b border-border/60"
+		>
+			<h2 class="text-xs font-bold tracking-wider uppercase text-muted-foreground">Conversations</h2>
+			<button
+				class="p-1 text-sm transition border rounded-xl border-border/60 bg-background/80 text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+				type="button"
+				onclick={startNewConversation}
+			>
+				<Plus/>
+			</button>
 		</div>
-	</section>
-
-	<section class="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-		<div class="rounded-2xl border bg-card p-6">
-			<div class="space-y-4">
-				<div class="grid gap-3 md:grid-cols-2">
-					<select class="h-10 rounded-md border bg-background px-3 text-sm" bind:value={playgroundPromptId}>
-						<option value="">Select saved prompt</option>
-						{#each prompts as prompt}
-							<option value={prompt.id}>{prompt.title}</option>
-						{/each}
-					</select>
-					<div class="flex h-10 items-center rounded-md border bg-muted/30 px-3 text-sm text-muted-foreground">
-						Provider: {providerLabels[provider] ?? provider}
-					</div>
-				</div>
-				<div class="grid gap-3 md:grid-cols-2">
-					<select
-						class="h-10 rounded-md border bg-background px-3 text-sm"
-						bind:value={selectedModelId}
-						onchange={updateCostEstimate}
-					>
-						{#each modelOptions as option}
-							<option value={option}>{option}</option>
-						{/each}
-						<option value="custom">Custom...</option>
-					</select>
-					<div class="flex h-10 items-center rounded-md border bg-muted/30 px-3 text-xs text-muted-foreground">
-						Models loaded from settings / API
-					</div>
-				</div>
-				{#if selectedModelId === 'custom'}
-					<div class="grid gap-3 md:grid-cols-2">
-						<input
-							class="h-10 rounded-md border bg-background px-3 text-sm"
-							bind:value={customModelId}
-							oninput={updateCostEstimate}
-							placeholder="Enter custom model id"
-						/>
-						<div class="flex h-10 items-center rounded-md border bg-muted/30 px-3 text-xs text-muted-foreground">
-							Custom model id is stored with the session
+		<div class="flex flex-col flex-1 gap-3 px-4 py-4 pr-3 overflow-y-auto">
+			<div
+				class={`rounded-2xl border px-4 py-3 text-left text-sm transition-all ${
+					!selectedSessionId
+						? 'border-primary bg-primary/5'
+						: 'border-border/40 bg-background/70 hover:border-border/70 hover:bg-muted/30'
+				}`}
+			>
+				<button class="w-full text-left" type="button" onclick={startNewConversation}>
+					<div class="font-semibold">New conversation</div>
+					<div class="text-xs text-muted-foreground">Start from scratch</div>
+				</button>
+			</div>
+			{#each visibleSessions as session}
+				<div
+					class={`rounded-2xl border px-4 py-3 transition-all ${
+						selectedSessionId === session.id
+							? 'border-primary bg-primary/5'
+							: 'border-border/40 bg-background/70 hover:border-border/70 hover:bg-muted/30'
+					}`}
+				>
+					<div class="flex items-start justify-between gap-2">
+						{#if editingSessionId === session.id}
+							<div class="flex-1 min-w-0">
+								<input
+									class="w-full h-8 px-2 text-sm border rounded-md bg-background"
+									bind:value={renameDraft}
+								/>
+								<div class="mt-1 text-xs text-muted-foreground">
+									{session.model} • Tokens: {session.totalTokens} • ${session.totalCost}
+								</div>
+							</div>
+						{:else}
+							<button
+								class="flex-1 min-w-0 text-left"
+								type="button"
+								onclick={() => selectSession(session)}
+							>
+								<div class="text-sm font-semibold truncate">{sessionTitle(session)}</div>
+								<div class="mt-1 text-xs text-muted-foreground">
+									{session.model} • Tokens: {session.totalTokens} • ${session.totalCost}
+								</div>
+							</button>
+						{/if}
+						<div class="flex shrink-0 flex-col gap-2 text-[11px] text-muted-foreground">
+							{#if editingSessionId === session.id}
+								<button
+									class="px-2 py-1 border rounded-md text-foreground"
+									type="button"
+									onclick={() => saveRename(session)}
+								>
+									Save
+								</button>
+								<button
+									class="px-2 py-1 border rounded-md"
+									type="button"
+									onclick={cancelRename}
+								>
+									Cancel
+								</button>
+							{:else}
+								<button
+									class="px-2 py-1 border rounded-md"
+									type="button"
+									onclick={() => beginRename(session)}
+								>
+									Rename
+								</button>
+								<button
+									class="px-2 py-1 border rounded-md text-destructive"
+									type="button"
+									onclick={() => deleteSession(session)}
+								>
+									Delete
+								</button>
+							{/if}
 						</div>
 					</div>
-				{/if}
-				<div class="grid gap-3 md:grid-cols-3">
-					<label class="text-xs text-muted-foreground">
-						Temp
-						<input
-							class="mt-1 h-9 w-full rounded-md border bg-background px-3"
-							type="number"
-							step="0.1"
-							bind:value={playgroundTemp}
-						/>
-					</label>
-					<label class="text-xs text-muted-foreground">
-						Max tokens
-						<input
-							class="mt-1 h-9 w-full rounded-md border bg-background px-3"
-							type="number"
-							bind:value={playgroundTokens}
-							oninput={updateCostEstimate}
-						/>
-					</label>
-					<label class="text-xs text-muted-foreground">
-						Top P
-						<input
-							class="mt-1 h-9 w-full rounded-md border bg-background px-3"
-							type="number"
-							step="0.1"
-							bind:value={playgroundTopP}
-						/>
-					</label>
 				</div>
-				<div class="grid gap-3 md:grid-cols-2">
-					<label class="text-xs text-muted-foreground">
-						Frequency penalty
-						<input
-							class="mt-1 h-9 w-full rounded-md border bg-background px-3"
-							type="number"
-							step="0.1"
-							bind:value={playgroundFrequency}
-						/>
-					</label>
-					<label class="text-xs text-muted-foreground">
-						Presence penalty
-						<input
-							class="mt-1 h-9 w-full rounded-md border bg-background px-3"
-							type="number"
-							step="0.1"
-							bind:value={playgroundPresence}
-						/>
-					</label>
+			{/each}
+			{#if visibleSessions.length === 0}
+				<div
+					class="px-4 py-6 text-sm text-center border border-dashed rounded-2xl border-border/50 bg-muted/20 text-muted-foreground"
+				>
+					No conversations yet.
+					<div class="mt-1 text-xs text-muted-foreground/60">Start one to see it here.</div>
 				</div>
+			{/if}
+		</div>
+	</div>
+
+	<div class="flex flex-col min-h-0 border rounded-none bg-card">
+
+		<div class="flex-1 min-h-0 px-6 py-6 pr-4 space-y-4 overflow-y-auto bg-background/90">
+			{#if playgroundMessages.length === 0}
+				<div
+					class="p-6 text-sm border border-dashed rounded-2xl border-border/50 bg-muted/20 text-muted-foreground"
+				>
+					No messages yet. Start chatting below.
+				</div>
+			{:else}
+				{#each playgroundMessages as message, index (index)}
+					<div class="p-4 text-sm border rounded-2xl border-border/60 bg-background">
+						<div class="text-xs uppercase text-muted-foreground">{message.role}</div>
+						<div class="mt-1">{message.content}</div>
+					</div>
+				{/each}
+			{/if}
+		</div>
+
+		<div class="px-6 py-4 border-t border-border/60">
+			<div class="relative left-0 w-full">
 				<textarea
-					class="min-h-[120px] rounded-md border bg-background p-3 text-sm"
+					class="min-h-[140px] w-full rounded-2xl border bg-background p-3 pb-12 text-sm"
 					bind:value={playgroundMessage}
 					oninput={updateCostEstimate}
+					onkeydown={(event) => {
+						if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+							event.preventDefault();
+							sendPlaygroundMessage();
+						}
+					}}
 					placeholder="Type a message to test the prompt"
 				></textarea>
-				<div class="flex flex-wrap items-center gap-3 text-sm">
+				<div class="absolute flex items-center gap-3 bottom-3 left-3">
 					<button
-						class="rounded-md bg-primary px-4 py-2 text-primary-foreground"
+						class="inline-flex items-center justify-center w-10 h-10 transition rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+						aria-label="Send message"
 						onclick={sendPlaygroundMessage}
 					>
-						Send message
+						<Send class="w-4 h-4" />
 					</button>
-					<button
-						class="rounded-md border px-4 py-2"
-						onclick={() => (playgroundMessages = [])}
-					>
-						Clear
-					</button>
-					<button class="rounded-md border px-4 py-2" onclick={savePlaygroundSession}>
-						Save session
-					</button>
-				</div>
-				<div class="rounded-xl border bg-muted/30 p-3 text-xs text-muted-foreground">
-					Tokens: {playgroundTokenEstimate} • Estimated cost: ${playgroundCost} • Latency:{' '}
-					{playgroundLatency ? `${playgroundLatency}ms` : '—'}
+					<div class="text-xs text-muted-foreground">Ctrl+enter to send.</div>
 				</div>
 			</div>
 		</div>
-		<div class="space-y-6">
-			<div class="rounded-2xl border bg-card p-6">
-				<h3 class="text-lg font-semibold">Conversation</h3>
-				{#if playgroundMessages.length === 0}
-					<div class="mt-4 rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-						No messages yet. Start a test on the left.
-					</div>
-				{:else}
-					<div class="mt-4 space-y-3">
-						{#each playgroundMessages as message, index (index)}
-							<div class="rounded-xl border p-3 text-sm">
-								<div class="text-xs uppercase text-muted-foreground">{message.role}</div>
-								<div class="mt-1">{message.content}</div>
-							</div>
-						{/each}
-					</div>
-				{/if}
-			</div>
-			<div class="rounded-2xl border bg-card p-6">
-				<h3 class="text-lg font-semibold">Session History</h3>
-				<div class="mt-4 space-y-3">
-					{#each sessions as session}
-						<div class="rounded-xl border p-3">
-							<div class="text-sm font-semibold">{promptLabel(session.promptId)}</div>
-							<div class="text-xs text-muted-foreground">
-								{session.model} • Tokens: {session.totalTokens} • ${session.totalCost}
-							</div>
-						</div>
+
+	</div>
+
+	<div
+		class="flex flex-col min-h-0 p-6 border rounded-t-none rounded-b-2xl bg-card lg:rounded-r-2xl lg:rounded-l-none lg:rounded-t-2xl"
+	>
+		<div class="flex items-center justify-between">
+			<h3 class="text-lg font-semibold">Model & settings</h3>
+			<div class="text-xs text-muted-foreground">Tuning controls</div>
+		</div>
+		<div class="flex flex-col flex-1 min-h-0 mt-4 space-y-4 overflow-auto">
+			<div class="grid gap-3">
+				<select class="h-10 px-3 text-sm border rounded-md bg-background" bind:value={playgroundPromptId}>
+					<option value="">Select saved prompt</option>
+					{#each prompts as prompt}
+						<option value={prompt.id}>{prompt.title}</option>
 					{/each}
-					{#if sessions.length === 0}
-						<div class="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-							No sessions saved yet.
-						</div>
-					{/if}
+				</select>
+				<div class="flex items-center h-10 px-3 text-sm border rounded-md bg-muted/30 text-muted-foreground">
+					Provider: {providerLabels[provider] ?? provider}
 				</div>
 			</div>
+			<div class="grid gap-3">
+				<select
+					class="h-10 px-3 text-sm border rounded-md bg-background"
+					bind:value={selectedModelId}
+					onchange={updateCostEstimate}
+				>
+					{#each modelOptions as option}
+						<option value={option}>{option}</option>
+					{/each}
+					<option value="custom">Custom...</option>
+				</select>
+				<div class="flex items-center h-10 px-3 text-xs border rounded-md bg-muted/30 text-muted-foreground">
+					Models loaded from settings / API
+				</div>
+			</div>
+			{#if selectedModelId === 'custom'}
+				<div class="grid gap-3">
+					<input
+						class="h-10 px-3 text-sm border rounded-md bg-background"
+						bind:value={customModelId}
+						oninput={updateCostEstimate}
+						placeholder="Enter custom model id"
+					/>
+					<div class="flex items-center h-10 px-3 text-xs border rounded-md bg-muted/30 text-muted-foreground">
+						Custom model id is stored with the session
+					</div>
+				</div>
+			{/if}
+			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+				<label class="text-xs text-muted-foreground">
+					Temp
+					<input
+						class="w-full px-3 mt-1 border rounded-md h-9 bg-background"
+						type="number"
+						step="0.1"
+						bind:value={playgroundTemp}
+					/>
+					</label>
+				<label class="text-xs text-muted-foreground">
+					Max tokens
+					<input
+						class="w-full px-3 mt-1 border rounded-md h-9 bg-background"
+						type="number"
+						bind:value={playgroundTokens}
+						oninput={updateCostEstimate}
+					/>
+					</label>
+				<label class="text-xs text-muted-foreground">
+					Top P
+					<input
+						class="w-full px-3 mt-1 border rounded-md h-9 bg-background"
+						type="number"
+						step="0.1"
+						bind:value={playgroundTopP}
+					/>
+				</label>
+			</div>
+			<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+				<label class="text-xs text-muted-foreground">
+					Frequency penalty
+					<input
+						class="w-full px-3 mt-1 border rounded-md h-9 bg-background"
+						type="number"
+						step="0.1"
+						bind:value={playgroundFrequency}
+					/>
+				</label>
+				<label class="text-xs text-muted-foreground">
+					Presence penalty
+					<input
+						class="w-full px-3 mt-1 border rounded-md h-9 bg-background"
+						type="number"
+						step="0.1"
+						bind:value={playgroundPresence}
+					/>
+				</label>
+			</div>
+			<div class="p-3 text-xs border rounded-xl bg-muted/30 text-muted-foreground">
+				<div>Tokens: {playgroundTokenEstimate}</div>
+				<div>Estimated cost: ${playgroundCost}</div>
+				<div>Latency: {playgroundLatency ? `${playgroundLatency}ms` : '—'}</div>
+			</div>
 		</div>
-	</section>
+	</div>
 </div>

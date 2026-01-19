@@ -24,14 +24,10 @@
 		</div>
 	</section>
 
-	<section class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+	<section class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 		<div class="rounded-2xl border bg-card p-5">
 			<div class="text-xs uppercase text-muted-foreground">Prompts</div>
 			<div class="mt-2 text-2xl font-semibold">{stats.promptsTotal}</div>
-		</div>
-		<div class="rounded-2xl border bg-card p-5">
-			<div class="text-xs uppercase text-muted-foreground">Favorites</div>
-			<div class="mt-2 text-2xl font-semibold">{stats.favorites}</div>
 		</div>
 		<div class="rounded-2xl border bg-card p-5">
 			<div class="text-xs uppercase text-muted-foreground">Sessions</div>
@@ -50,9 +46,6 @@
 				{#each recent.prompts as prompt}
 					<div class="rounded-xl border p-3">
 						<div class="text-sm font-semibold">{prompt.title}</div>
-						<div class="text-xs text-muted-foreground">
-							{prompt.category} • {prompt.modelTarget}
-						</div>
 					</div>
 				{/each}
 				{#if recent.prompts.length === 0}
