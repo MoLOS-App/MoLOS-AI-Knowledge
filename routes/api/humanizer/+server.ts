@@ -11,8 +11,8 @@ import { db } from "$lib/server/db";
 const CreateSchema = z.object({
   inputText: z.string().min(1),
   outputText: z.string().optional(),
-  level: z.enum(Object.values(HumanizationLevel) as [string, ...string[]]),
-  tone: z.enum(Object.values(HumanizationTone) as [string, ...string[]]),
+  level: z.nativeEnum(HumanizationLevel),
+  tone: z.nativeEnum(HumanizationTone),
   confidenceScore: z.number().min(0).max(100),
 });
 

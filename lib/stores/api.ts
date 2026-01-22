@@ -165,6 +165,16 @@ export async function updatePlaygroundSession(
   );
 }
 
+export async function deletePlaygroundSession(id: string): Promise<void> {
+  await handle(
+    await fetch(`${base}/playground-sessions`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    }),
+  );
+}
+
 export async function fetchAiProviderSettings(): Promise<AiProviderSettings> {
   return handle(await fetch(`${base}/settings`));
 }
@@ -201,6 +211,14 @@ export async function createHumanizerJob(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
+    }),
+  );
+}
+
+export async function deleteHumanizerJob(id: string): Promise<{ success: boolean }> {
+  return handle(
+    await fetch(`${base}/humanizer/${id}`, {
+      method: "DELETE",
     }),
   );
 }

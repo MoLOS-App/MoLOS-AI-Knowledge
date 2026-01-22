@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { Send , Plus} from 'lucide-svelte';
+	import { onMount, tick } from 'svelte';
+	import { Send, Plus, Menu, SlidersHorizontal } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
 	import {
 		createPlaygroundSession,
+		deletePlaygroundSession,
 		fetchProviderModels,
 		updatePlaygroundSession
 	} from '$lib/stores/external_modules/MoLOS-AI-Knowledge/api';
@@ -55,11 +56,18 @@
 	let isSending = false;
 	let selectedSessionId = '';
 	let selectedSession: PlaygroundSession | null = null;
-	let deletedSessionIds = new Set<string>();
 	let renamedSessionTitles: Record<string, string> = {};
 	let editingSessionId = '';
 	let renameDraft = '';
 	let visibleSessions: PlaygroundSession[] = [];
+	let messagesContainer: HTMLDivElement | null = null;
+	let lastMessageCount = 0;
+	let isSessionsOpen = false;
+	let isSettingsOpen = false;
+	let isPanelOpen = false;
+	let pendingDeleteSession: PlaygroundSession | null = null;
+
+	$: isPanelOpen = isSessionsOpen || isSettingsOpen;
 
 	const defaultModels = [
 		'gpt-4',
@@ -100,7 +108,7 @@
 			selectedModelId === 'custom' ? customModelId.trim() || fallbackModel : selectedModelId;
 	}
 
-	$: visibleSessions = sessions.filter((session) => !deletedSessionIds.has(session.id));
+	$: visibleSessions = sessions;
 
 	$: selectedSession = selectedSessionId
 		? visibleSessions.find((session) => session.id === selectedSessionId) ?? null
@@ -124,7 +132,19 @@
 		} catch {
 			models = models.length ? models : defaultModels;
 		}
+		await tick();
+		scrollMessagesToBottom();
 	});
+
+	const scrollMessagesToBottom = () => {
+		if (!messagesContainer) return;
+		messagesContainer.scrollTop = messagesContainer.scrollHeight;
+	};
+
+	$: if (playgroundMessages.length !== lastMessageCount) {
+		lastMessageCount = playgroundMessages.length;
+		tick().then(scrollMessagesToBottom);
+	}
 
 	const updateCostEstimate = (text = playgroundMessage) => {
 		const tokens = estimateTokens(text);
@@ -263,6 +283,9 @@
 		playgroundCost = 0;
 		playgroundError = '';
 		isSending = false;
+		isSessionsOpen = false;
+		isSettingsOpen = false;
+		void tick().then(scrollMessagesToBottom);
 	};
 
 	const sessionTitle = (session: PlaygroundSession) =>
@@ -285,13 +308,33 @@
 		renameDraft = '';
 	};
 
-	const deleteSession = (session: PlaygroundSession) => {
-		const nextDeleted = new Set(deletedSessionIds);
-		nextDeleted.add(session.id);
-		deletedSessionIds = nextDeleted;
-		if (selectedSessionId === session.id) {
-			startNewConversation();
+	const requestDeleteSession = (session: PlaygroundSession) => {
+		pendingDeleteSession = session;
+		isSessionsOpen = false;
+		isSettingsOpen = false;
+	};
+
+	const confirmDeleteSession = async () => {
+		if (!pendingDeleteSession) return;
+		const session = pendingDeleteSession;
+		try {
+			await deletePlaygroundSession(session.id);
+			const nextSessions = sessions.filter((item) => item.id !== session.id);
+			sessionsStore.set(nextSessions);
+			if (selectedSessionId === session.id) {
+				startNewConversation();
+			}
+			pendingDeleteSession = null;
+			toast.success('Conversation deleted.');
+		} catch (err) {
+			toast.error(
+				err instanceof Error ? err.message : 'Failed to delete conversation. Try again.'
+			);
 		}
+	};
+
+	const cancelDeleteSession = () => {
+		pendingDeleteSession = null;
 	};
 
 	const selectSession = (session: PlaygroundSession) => {
@@ -299,6 +342,8 @@
 		editingSessionId = '';
 		playgroundError = '';
 		isSending = false;
+		isSessionsOpen = false;
+		isSettingsOpen = false;
 		try {
 			const parsed = JSON.parse(session.messagesJson || '[]');
 			playgroundMessages = Array.isArray(parsed) ? parsed : [];
@@ -358,6 +403,7 @@
 		playgroundTokenEstimate = session.totalTokens ?? 0;
 		playgroundCost = session.totalCost ?? 0;
 		playgroundMessage = '';
+		void tick().then(scrollMessagesToBottom);
 	};
 
 	const promptLabel = (promptId: string | undefined) => {
@@ -367,17 +413,69 @@
 </script>
 
 <div
-	class="grid h-full w-full grid-rows-[auto_minmax(0,1fr)_auto] gap-0 p-4 sm:p-6 lg:grid-cols-[260px_minmax(0,1fr)_420px] lg:grid-rows-1"
+	class="grid h-[100svh] w-full grid-rows-[auto_minmax(0,1fr)_auto] gap-0 lg:h-full lg:grid-cols-[260px_minmax(0,1fr)_420px] lg:grid-rows-1 lg:rounded-2xl lg:border"
 >
-	<div
-		class="flex flex-col min-h-0 border rounded-b-none rounded-t-2xl bg-card lg:rounded-l-2xl lg:rounded-r-none lg:rounded-t-2xl"
+	{#if pendingDeleteSession}
+		<button
+			class="fixed inset-0 z-40 backdrop-blur-sm"
+			type="button"
+			aria-label="Close delete confirmation"
+			onclick={cancelDeleteSession}
+		></button>
+		<div
+			class="fixed left-1/2 top-1/2 z-50 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border/60 bg-card p-5 shadow-xl"
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="delete-session-title"
+			aria-describedby="delete-session-description"
+		>
+			<h3 id="delete-session-title" class="text-base font-semibold">
+				Delete conversation?
+			</h3>
+			<p id="delete-session-description" class="mt-2 text-sm text-muted-foreground">
+				This will remove "{sessionTitle(pendingDeleteSession)}" from your list.
+			</p>
+			<div class="mt-4 flex justify-end gap-2">
+				<button
+					class="rounded-md px-3 py-2 text-sm"
+					type="button"
+					onclick={cancelDeleteSession}
+				>
+					Cancel
+				</button>
+				<button
+					class="rounded-md bg-destructive px-3 py-2 text-sm text-destructive-foreground"
+					type="button"
+					onclick={confirmDeleteSession}
+				>
+					Delete
+				</button>
+			</div>
+		</div>
+	{/if}
+	{#if isPanelOpen}
+		<button
+			class="fixed inset-0 z-30 backdrop-blur-sm lg:hidden"
+			type="button"
+			aria-label="Close panels"
+			onclick={() => {
+				isSessionsOpen = false;
+				isSettingsOpen = false;
+			}}
+		></button>
+	{/if}
+
+	<aside
+		class="fixed inset-y-0 left-0 z-40 flex w-80 flex-col border-r border-border/60 bg-card shadow-lg transition-transform duration-300 ease-out lg:static lg:z-0 lg:w-auto lg:translate-x-0 lg:rounded-l-2xl lg:rounded-r-none lg:rounded-t-2xl lg:shadow-none lg:border-r-0 {isSessionsOpen
+			? 'translate-x-0'
+			: '-translate-x-full lg:translate-x-0'}"
 	>
 		<div
-			class="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b border-border/60"
+			class="sticky top-0 z-10 flex items-center justify-between px-4 py-3"
 		>
 			<h2 class="text-xs font-bold tracking-wider uppercase text-muted-foreground">Conversations</h2>
 			<button
-				class="p-1 text-sm transition border rounded-xl border-border/60 bg-background/80 text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+				class="p-1 text-sm transition rounded-xl border-border/60 bg-background/80 text-muted-foreground hover:bg-muted/30 hover:text-foreground"
 				type="button"
 				onclick={startNewConversation}
 			>
@@ -386,7 +484,7 @@
 		</div>
 		<div class="flex flex-col flex-1 gap-3 px-4 py-4 pr-3 overflow-y-auto">
 			<div
-				class={`rounded-2xl border px-4 py-3 text-left text-sm transition-all ${
+				class={`rounded-2xl px-4 py-3 text-left text-sm transition-all ${
 					!selectedSessionId
 						? 'border-primary bg-primary/5'
 						: 'border-border/40 bg-background/70 hover:border-border/70 hover:bg-muted/30'
@@ -399,7 +497,7 @@
 			</div>
 			{#each visibleSessions as session}
 				<div
-					class={`rounded-2xl border px-4 py-3 transition-all ${
+					class={`rounded-2xl px-4 py-3 transition-all ${
 						selectedSessionId === session.id
 							? 'border-primary bg-primary/5'
 							: 'border-border/40 bg-background/70 hover:border-border/70 hover:bg-muted/30'
@@ -409,7 +507,7 @@
 						{#if editingSessionId === session.id}
 							<div class="flex-1 min-w-0">
 								<input
-									class="w-full h-8 px-2 text-sm border rounded-md bg-background"
+									class="w-full h-8 px-2 text-sm rounded-md bg-background"
 									bind:value={renameDraft}
 								/>
 								<div class="mt-1 text-xs text-muted-foreground">
@@ -431,14 +529,14 @@
 						<div class="flex shrink-0 flex-col gap-2 text-[11px] text-muted-foreground">
 							{#if editingSessionId === session.id}
 								<button
-									class="px-2 py-1 border rounded-md text-foreground"
+									class="px-2 py-1 rounded-md text-foreground"
 									type="button"
 									onclick={() => saveRename(session)}
 								>
 									Save
 								</button>
 								<button
-									class="px-2 py-1 border rounded-md"
+									class="px-2 py-1 rounded-md"
 									type="button"
 									onclick={cancelRename}
 								>
@@ -446,16 +544,16 @@
 								</button>
 							{:else}
 								<button
-									class="px-2 py-1 border rounded-md"
+									class="px-2 py-1 rounded-md"
 									type="button"
 									onclick={() => beginRename(session)}
 								>
 									Rename
 								</button>
 								<button
-									class="px-2 py-1 border rounded-md text-destructive"
+									class="px-2 py-1 rounded-md text-destructive"
 									type="button"
-									onclick={() => deleteSession(session)}
+									onclick={() => requestDeleteSession(session)}
 								>
 									Delete
 								</button>
@@ -466,27 +564,61 @@
 			{/each}
 			{#if visibleSessions.length === 0}
 				<div
-					class="px-4 py-6 text-sm text-center border border-dashed rounded-2xl border-border/50 bg-muted/20 text-muted-foreground"
+					class="px-4 py-6 text-sm text-center border-dashed rounded-2xl border-border/50 bg-muted/20 text-muted-foreground"
 				>
 					No conversations yet.
 					<div class="mt-1 text-xs text-muted-foreground/60">Start one to see it here.</div>
 				</div>
 			{/if}
 		</div>
-	</div>
+	</aside>
 
-	<div class="flex flex-col min-h-0 border rounded-none bg-card">
+	<div class="flex min-h-0 flex-col rounded-none bg-card h-[90vh]">
+		<div
+			class="sticky top-0 z-20 flex items-center justify-between border-b border-border/60 bg-background/90 px-4 py-3 lg:hidden"
+		>
+			<div class="flex items-center gap-2 text-sm font-semibold">
+				<button
+					class="flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-background text-foreground transition hover:bg-muted"
+					type="button"
+					aria-label="Toggle conversations"
+					aria-expanded={isSessionsOpen}
+					onclick={() => {
+						isSessionsOpen = !isSessionsOpen;
+						if (isSessionsOpen) isSettingsOpen = false;
+					}}
+				>
+					<Menu class="h-4 w-4" />
+				</button>
+				<span>Playground</span>
+			</div>
+			<button
+				class="flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-background text-foreground transition hover:bg-muted"
+				type="button"
+				aria-label="Toggle settings"
+				aria-expanded={isSettingsOpen}
+				onclick={() => {
+					isSettingsOpen = !isSettingsOpen;
+					if (isSettingsOpen) isSessionsOpen = false;
+				}}
+			>
+				<SlidersHorizontal class="h-4 w-4" />
+			</button>
+		</div>
 
-		<div class="flex-1 min-h-0 px-6 py-6 pr-4 space-y-4 overflow-y-auto bg-background/90">
+		<div
+			bind:this={messagesContainer}
+			class="flex-1 min-h-0 space-y-4 overflow-y-auto bg-background/90 px-4 py-4 pr-3 sm:px-6 sm:py-6 sm:pr-4 lg:border lg:border-t-0 lg:border-b-0 lg:border-border/60"
+		>
 			{#if playgroundMessages.length === 0}
 				<div
-					class="p-6 text-sm border border-dashed rounded-2xl border-border/50 bg-muted/20 text-muted-foreground"
+					class="p-6 text-sm border-dashed rounded-2xl border-border/50 bg-muted/20 text-muted-foreground"
 				>
 					No messages yet. Start chatting below.
 				</div>
 			{:else}
 				{#each playgroundMessages as message, index (index)}
-					<div class="p-4 text-sm border rounded-2xl border-border/60 bg-background">
+					<div class="p-4 text-sm rounded-2xl border-border/60 bg-background">
 						<div class="text-xs uppercase text-muted-foreground">{message.role}</div>
 						<div class="mt-1">{message.content}</div>
 					</div>
@@ -494,10 +626,10 @@
 			{/if}
 		</div>
 
-		<div class="px-6 py-4 border-t border-border/60">
+		<div class="px-4 py-4 sm:px-6 lg:border-t lg:border-border/60">
 			<div class="relative left-0 w-full">
 				<textarea
-					class="min-h-[140px] w-full rounded-2xl border bg-background p-3 pb-12 text-sm"
+					class="min-h-[120px] w-full rounded-2xl bg-background p-3 pb-12 text-sm sm:min-h-[140px]"
 					bind:value={playgroundMessage}
 					oninput={updateCostEstimate}
 					onkeydown={(event) => {
@@ -508,7 +640,7 @@
 					}}
 					placeholder="Type a message to test the prompt"
 				></textarea>
-				<div class="absolute flex items-center gap-3 bottom-3 left-3">
+				<div class="absolute bottom-3 left-3 flex items-center gap-3">
 					<button
 						class="inline-flex items-center justify-center w-10 h-10 transition rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
 						aria-label="Send message"
@@ -532,8 +664,10 @@
 
 	</div>
 
-	<div
-		class="flex flex-col min-h-0 p-6 border rounded-t-none rounded-b-2xl bg-card lg:rounded-r-2xl lg:rounded-l-none lg:rounded-t-2xl"
+	<aside
+		class="fixed inset-y-0 right-0 z-40 flex min-h-0 w-80 flex-col border-l border-border/60 bg-card p-4 shadow-lg transition-transform duration-300 ease-out sm:p-6 lg:static lg:z-0 lg:w-auto lg:translate-x-0 lg:rounded-r-2xl lg:rounded-l-none lg:rounded-t-2xl lg:shadow-none lg:border-l-0 {isSettingsOpen
+			? 'translate-x-0'
+			: 'translate-x-full lg:translate-x-0'}"
 	>
 		<div class="flex items-center justify-between">
 			<div>
@@ -544,26 +678,23 @@
 		</div>
 		<div class="flex flex-col flex-1 min-h-0 mt-4 space-y-4 overflow-auto">
 			{#if playgroundError}
-				<div class="p-3 text-xs border rounded-2xl border-destructive/40 bg-destructive/10 text-destructive">
+				<div class="p-3 text-xs rounded-2xl border-destructive/40 bg-destructive/10 text-destructive">
 					{playgroundError}
 				</div>
 			{/if}
-			<div class="p-4 border rounded-2xl bg-background/70">
+			<div class="p-4 rounded-2xl bg-background/70">
 				<div class="text-xs font-semibold tracking-wide uppercase text-muted-foreground">
 					Prompt, provider & model
 				</div>
 				<div class="grid gap-3 mt-3">
-					<select class="h-10 px-3 text-sm border rounded-md bg-background" bind:value={playgroundPromptId}>
+					<select class="h-10 px-3 text-sm rounded-md bg-background" bind:value={playgroundPromptId}>
 						<option value="">Select saved prompt</option>
 						{#each prompts as prompt}
 							<option value={prompt.id}>{prompt.title}</option>
 						{/each}
 					</select>
-					<div class="flex items-center h-10 px-3 text-sm border rounded-md bg-muted/30 text-muted-foreground">
-						Provider: {providerLabels[provider] ?? provider}
-					</div>
 					<select
-						class="h-10 px-3 text-sm border rounded-md bg-background"
+						class="h-10 px-3 text-sm rounded-md bg-background"
 						bind:value={selectedModelId}
 						onchange={updateCostEstimate}
 					>
@@ -574,7 +705,7 @@
 					</select>
 					{#if selectedModelId === 'custom'}
 						<input
-							class="h-10 px-3 text-sm border rounded-md bg-background"
+							class="h-10 px-3 text-sm rounded-md bg-background"
 							bind:value={customModelId}
 							oninput={updateCostEstimate}
 							placeholder="Enter custom model id"
@@ -590,7 +721,7 @@
 					<label class="text-xs text-muted-foreground">
 						Max tokens
 						<input
-							class="w-full px-3 mt-2 border rounded-md h-9 bg-background"
+							class="w-full px-3 mt-2 rounded-md h-9 bg-background"
 							type="number"
 							bind:value={playgroundTokens}
 							oninput={updateCostEstimate}
@@ -598,7 +729,7 @@
 					</label>
 				</div>
 			</div>
-			<div class="p-4 border rounded-2xl bg-background/70">
+			<div class="p-4 rounded-2xl bg-background/70">
 				<div class="text-xs font-semibold tracking-wide uppercase text-muted-foreground">
 					Parameters
 				</div>
@@ -665,7 +796,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="grid gap-2 p-4 text-xs border rounded-2xl bg-muted/30 text-muted-foreground">
+			<div class="grid gap-2 p-4 text-xs rounded-2xl bg-muted/30 text-muted-foreground">
 				<div class="flex items-center justify-between">
 					<span>Tokens</span>
 					<span class="text-foreground">{playgroundTokenEstimate}</span>
@@ -682,5 +813,5 @@
 				</div>
 			</div>
 		</div>
-	</div>
+	</aside>
 </div>

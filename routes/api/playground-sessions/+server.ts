@@ -25,6 +25,10 @@ const UpdateSchema = z.object({
   latencyMs: z.number().optional(),
 });
 
+const DeleteSchema = z.object({
+  id: z.string().min(1),
+});
+
 export const GET: RequestHandler = async ({ locals }) => {
   const userId = locals.user?.id;
   if (!userId) throw error(401, "Unauthorized");
@@ -54,4 +58,15 @@ export const PUT: RequestHandler = async ({ locals, request }) => {
   const session = await repo.update(userId, id, updates);
   if (!session) throw error(404, "Playground session not found");
   return json(session);
+};
+
+export const DELETE: RequestHandler = async ({ locals, request }) => {
+  const userId = locals.user?.id;
+  if (!userId) throw error(401, "Unauthorized");
+
+  const payload = DeleteSchema.parse(await request.json());
+  const repo = new PlaygroundSessionRepository(db);
+  const deleted = await repo.delete(userId, payload.id);
+  if (!deleted) throw error(404, "Playground session not found");
+  return json({ success: true });
 };

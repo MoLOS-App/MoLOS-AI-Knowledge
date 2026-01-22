@@ -5,13 +5,14 @@ import type {
   PromptChain,
   UpdatePromptChainInput,
 } from "$lib/models/external_modules/MoLOS-AI-Knowledge";
-import { BaseRepository } from "$lib/repositories/base-repository";
+import { BaseRepository } from "./base-repository";
 import { parseJsonArray, toJsonString } from "./utils";
 
 export class PromptChainRepository extends BaseRepository {
   private mapChain(row: typeof promptChains.$inferSelect): PromptChain {
     return {
       ...row,
+      description: row.description ?? undefined,
       tags: parseJsonArray(row.tags),
     };
   }

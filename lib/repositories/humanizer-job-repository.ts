@@ -1,11 +1,11 @@
 import { and, desc, eq } from "drizzle-orm";
 import { humanizerJobs } from "$lib/server/db/schema/external_modules/MoLOS-AI-Knowledge/tables";
 import type { CreateHumanizerJobInput, HumanizerJob } from "$lib/models/external_modules/MoLOS-AI-Knowledge";
-import { BaseRepository } from "$lib/repositories/base-repository";
+import { BaseRepository } from "./base-repository";
 
 export class HumanizerJobRepository extends BaseRepository {
   private mapJob(row: typeof humanizerJobs.$inferSelect): HumanizerJob {
-    return { ...row };
+    return { ...row, outputText: row.outputText ?? undefined };
   }
 
   async listByUserId(userId: string, limit = 20): Promise<HumanizerJob[]> {
@@ -35,5 +35,14 @@ export class HumanizerJobRepository extends BaseRepository {
       .returning();
 
     return this.mapJob(result[0]);
+  }
+
+  async delete(userId: string, jobId: string): Promise<boolean> {
+    const [result] = await this.db
+      .delete(humanizerJobs)
+      .where(and(eq(humanizerJobs.id, jobId), eq(humanizerJobs.userId, userId)))
+      .returning({ id: humanizerJobs.id });
+
+    return !!result;
   }
 }

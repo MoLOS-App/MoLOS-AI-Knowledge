@@ -30,15 +30,7 @@ const UpdatePromptSchema = z.object({
 
 export const GET: RequestHandler = async ({ locals, url }) => {
   const userId = locals.user?.id;
-  console.log("[MoLOS-AI-Knowledge][prompts][GET] userId", userId ?? "none");
   if (!userId) throw error(401, "Unauthorized");
-
-  console.log("[MoLOS-AI-Knowledge][prompts][GET] env", {
-    cwd: typeof process !== "undefined" ? process.cwd() : "unknown",
-    databaseUrl:
-      typeof process !== "undefined" ? process.env?.DATABASE_URL : "unknown",
-    nodeEnv: typeof process !== "undefined" ? process.env?.NODE_ENV : "unknown",
-  });
 
   const filters = ListFiltersSchema.parse({
     search: url.searchParams.get("search") ?? undefined,
@@ -48,10 +40,6 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 
   const repo = new PromptRepository(db);
   const prompts = await repo.listByUserId(userId, filters);
-  console.log("[MoLOS-AI-Knowledge][prompts][GET] result", {
-    userId,
-    count: prompts.length,
-  });
   return json(prompts);
 };
 

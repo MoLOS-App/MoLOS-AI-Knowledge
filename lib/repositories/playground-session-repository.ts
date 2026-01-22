@@ -79,4 +79,13 @@ export class PlaygroundSessionRepository extends BaseRepository {
 
     return result ? this.mapSession(result) : null;
   }
+
+  async delete(userId: string, sessionId: string): Promise<boolean> {
+    const [result] = await this.db
+      .delete(playgroundSessions)
+      .where(and(eq(playgroundSessions.id, sessionId), eq(playgroundSessions.userId, userId)))
+      .returning({ id: playgroundSessions.id });
+
+    return !!result;
+  }
 }
