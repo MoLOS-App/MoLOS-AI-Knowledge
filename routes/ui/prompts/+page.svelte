@@ -16,6 +16,8 @@
 		DialogHeader,
 		DialogTitle
 	} from '$lib/components/ui/dialog';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
 
 	export let data: PageData;
 
@@ -102,31 +104,35 @@
 					</p>
 				</div>
 				<div class="flex flex-wrap gap-2">
-					<button
+					<Button
+						variant="secondary"
+						size="sm"
 						class="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background"
 						onclick={openNewPrompt}
 					>
 						Add prompt
-					</button>
-					<button
+					</Button>
+					<Button
+						variant="secondary"
+						size="sm"
 						class="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background"
 						onclick={openNewLlmFile}
 					>
 						Add LLM.txt
-					</button>
+					</Button>
 				</div>
 			</div>
 
 			<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 				<div class="w-full md:max-w-xs">
-					<input
+					<Input
 						class="h-10 w-full rounded-full border bg-background px-4 text-sm"
 						placeholder="Search prompts"
 						bind:value={search}
 					/>
 				</div>
 				<div class="w-full md:max-w-xs">
-					<input
+					<Input
 						class="h-10 w-full rounded-full border bg-background px-4 text-sm"
 						placeholder="Filter by label"
 						bind:value={labelFilter}
@@ -140,7 +146,9 @@
 
 			{#if labelOptions.length}
 				<div class="flex flex-wrap items-center gap-2 text-xs">
-					<button
+					<Button
+						variant="outline"
+						size="sm"
 						class={`rounded-full border px-3 py-1 ${
 							!labelFilter.trim()
 								? 'bg-foreground text-background'
@@ -149,9 +157,11 @@
 						onclick={() => (labelFilter = '')}
 					>
 						All labels
-					</button>
+					</Button>
 					{#each labelOptions as label}
-						<button
+						<Button
+							variant="outline"
+							size="sm"
 							class={`rounded-full border px-3 py-1 ${
 								normalize(labelFilter) === normalize(label)
 									? 'bg-foreground text-background'
@@ -160,7 +170,7 @@
 							onclick={() => (labelFilter = label)}
 						>
 							{label}
-						</button>
+						</Button>
 					{/each}
 				</div>
 			{/if}
@@ -262,18 +272,22 @@
 			</DialogDescription>
 		</DialogHeader>
 		<DialogFooter class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
-			<button
-				class="rounded-full border px-4 py-2 text-sm"
+			<Button
+				variant="outline"
+				size="sm"
+				class="rounded-full px-4 py-2 text-sm"
 				onclick={() => (promptDeleteOpen = false)}
 			>
 				Cancel
-			</button>
-			<button
-				class="rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background"
+			</Button>
+			<Button
+				variant="destructive"
+				size="sm"
+				class="rounded-full px-4 py-2 text-sm font-semibold"
 				onclick={confirmDeletePrompt}
 			>
 				Delete prompt
-			</button>
+			</Button>
 		</DialogFooter>
 	</DialogContent>
 </Dialog>

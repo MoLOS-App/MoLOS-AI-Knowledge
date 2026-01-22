@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import type { Prompt } from '$lib/models/external_modules/MoLOS-AI-Knowledge';
+	import { Button } from '$lib/components/ui/button';
 
 	export let data: { prompt: Prompt | null };
 
@@ -37,12 +38,14 @@
 						Copy a share link for this prompt.
 					</p>
 				</div>
-				<button
+				<Button
+					variant="outline"
+					size="sm"
 					class="rounded-full border px-4 py-2 text-xs font-semibold text-foreground"
 					onclick={() => goto('/ui/MoLOS-AI-Knowledge/prompts')}
 				>
 					Back to prompts
-				</button>
+				</Button>
 			</div>
 
 			{#if prompt}
@@ -52,9 +55,14 @@
 							<div class="text-sm font-semibold">{prompt.title}</div>
 						</div>
 						<div class="flex items-center gap-2 text-xs">
-							<button class="rounded-full border px-3 py-1" onclick={copyLink}>
+							<Button
+								variant="outline"
+								size="sm"
+								class="rounded-full px-3 py-1"
+								onclick={copyLink}
+							>
 								{copied ? 'Copied' : 'Copy link'}
-							</button>
+							</Button>
 						</div>
 					</div>
 					{#if prompt.description}

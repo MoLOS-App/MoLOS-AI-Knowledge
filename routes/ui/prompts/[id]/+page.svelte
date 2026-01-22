@@ -22,6 +22,9 @@
 		SheetHeader,
 		SheetTitle
 	} from '$lib/components/ui/sheet';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Textarea } from '$lib/components/ui/textarea';
 
 	export let data: PageData;
 
@@ -186,25 +189,27 @@
 	<header class="rounded-[28px] border bg-card/80 p-6 shadow-sm" in:fly={{ y: 12, duration: 220 }}>
 		<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 			<div class="space-y-2">
-				<input
+				<Input
 					class="w-full bg-transparent text-2xl font-semibold tracking-tight outline-none placeholder:text-muted-foreground border-b focus:border-foreground border-foreground/20 sm:max-w-2xl"
 					bind:value={promptTitle}
 					placeholder="Untitled prompt"
 				/>
-				<textarea
+				<Textarea
 					class="w-full resize-none bg-transparent text-sm text-muted-foreground outline-none placeholder:text-muted-foreground border-b focus:border-foreground border-foreground/20 sm:max-w-2xl"
 					bind:value={promptDescription}
 					placeholder="Add a short description"
 					rows={1}
-				></textarea>
+				/>
 			</div>
 			<div class="flex flex-wrap items-center gap-3 sm:justify-end">
-				<button
-					class="rounded-full border px-4 py-2 text-md font-semibold"
+				<Button
+					variant="outline"
+					size="sm"
+					class="rounded-full px-4 py-2 text-md font-semibold"
 					on:click={() => goto('/ui/MoLOS-AI-Knowledge/prompts')}
 				>
 					Go back
-				</button>
+				</Button>
 			</div>
 		</div>
 	</header>
@@ -216,11 +221,11 @@
 					<h3 class="text-sm font-semibold">Prompt content</h3>
 					<span class="text-xs text-muted-foreground">Main draft</span>
 				</div>
-				<textarea
+				<Textarea
 					class="mt-4 min-h-[420px] w-full rounded-md border bg-background p-3 text-sm"
 					bind:value={promptContent}
 					placeholder="Write the prompt content (Markdown supported)"
-				></textarea>
+				/>
 			</section>
 		</div>
 
@@ -229,17 +234,18 @@
 			<div class="rounded-[28px] border bg-card/80 p-5 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
 				<h3 class="text-sm font-semibold">Commit</h3>
 				<div class="mt-4 grid gap-3">
-					<input
+					<Input
 						class="h-10 w-full rounded-md border bg-background px-3 text-sm"
 						bind:value={promptCommit}
 						placeholder="Commit message (optional)"
 					/>
-					<button
+					<Button
+						size="sm"
 						class="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background"
 						on:click={savePrompt}
 					>
 						{isNew ? 'Create prompt' : 'Save changes'}
-					</button>
+					</Button>
 				</div>
 			</div>
 
@@ -249,33 +255,39 @@
 					<div class="text-xs text-muted-foreground">Current</div>
 					<div class="text-sm font-semibold">v{currentVersion}</div>
 				</div>
-				<button
-					class="mt-4 w-full rounded-full border px-3 py-2 text-xs font-semibold"
+				<Button
+					variant="outline"
+					size="sm"
+					class="mt-4 w-full rounded-full px-3 py-2 text-xs font-semibold"
 					on:click={() => {
 						versionsOpen = true;
 					}}
 				>
 					Show versions
-				</button>
+				</Button>
 			</section>
 
 			<section class="rounded-[28px] border bg-card/80 p-5 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
 				<h3 class="text-sm font-semibold">Actions</h3>
 				<div class="mt-4 flex flex-col gap-2">
-					<button
-						class="rounded-full border px-3 py-2 text-xs font-semibold"
+					<Button
+						variant="outline"
+						size="sm"
+						class="rounded-full px-3 py-2 text-xs font-semibold"
 						on:click={sharePrompt}
 						disabled={!promptId}
 					>
 						Share prompt
-					</button>
-					<button
-						class="rounded-full border px-3 py-2 text-xs font-semibold text-destructive"
+					</Button>
+					<Button
+						variant="outline"
+						size="sm"
+						class="rounded-full px-3 py-2 text-xs font-semibold text-destructive"
 						on:click={deletePromptItem}
 						disabled={!promptId}
 					>
 						Delete prompt
-					</button>
+					</Button>
 				</div>
 			</section>
 
@@ -289,48 +301,54 @@
 			<SheetTitle>Versions</SheetTitle>
 			<p class="text-xs text-muted-foreground">{data.versions.length} total</p>
 		</SheetHeader>
-		<div class="flex-1 overflow-auto px-5 py-4">
-			<div class="space-y-3">
-			{#if data.versions.length === 0}
-				<p class="text-xs text-muted-foreground">No versions yet.</p>
-			{:else}
-				{#each data.versions as version}
-					<div class="rounded-xl border bg-background/70 p-3">
-						<div class="flex items-start justify-between gap-2">
-							<div>
-								<div class="text-xs font-semibold">v{version.versionNumber}</div>
-								<div class="text-[11px] text-muted-foreground">
-									{version.commitMessage || 'No message'}
-								</div>
-								<div class="text-[10px] text-muted-foreground">
-									{formatTimestamp(version.createdAt)}
-								</div>
+	<div class="flex-1 overflow-auto px-5 py-4">
+		<div class="space-y-3">
+		{#if data.versions.length === 0}
+			<p class="text-xs text-muted-foreground">No versions yet.</p>
+		{:else}
+			{#each data.versions as version}
+				<div class="rounded-xl border bg-background/70 p-3">
+					<div class="flex items-start justify-between gap-2">
+						<div>
+							<div class="text-xs font-semibold">v{version.versionNumber}</div>
+							<div class="text-[11px] text-muted-foreground">
+								{version.commitMessage || 'No message'}
 							</div>
-							<div class="flex flex-col gap-2 text-[10px]">
-								<button
-									class="rounded-full border px-2 py-1"
-									on:click={() => viewVersion(version)}
-								>
-									View
-								</button>
-								<button
-									class="rounded-full border px-2 py-1"
-									on:click={() => restoreVersion(version)}
-								>
-									Restore
-								</button>
-								<button
-									class="rounded-full border px-2 py-1"
-									on:click={() => removeVersion(version)}
-									disabled={deletingVersionId === version.id}
-								>
-									Delete
-								</button>
+							<div class="text-[10px] text-muted-foreground">
+								{formatTimestamp(version.createdAt)}
 							</div>
 						</div>
+						<div class="flex flex-col gap-2 text-[10px]">
+							<Button
+								variant="outline"
+								size="sm"
+								class="rounded-full px-2 py-1"
+								on:click={() => viewVersion(version)}
+							>
+								View
+							</Button>
+							<Button
+								variant="outline"
+								size="sm"
+								class="rounded-full px-2 py-1"
+								on:click={() => restoreVersion(version)}
+							>
+								Restore
+							</Button>
+							<Button
+								variant="outline"
+								size="sm"
+								class="rounded-full px-2 py-1"
+								on:click={() => removeVersion(version)}
+								disabled={deletingVersionId === version.id}
+							>
+								Delete
+							</Button>
+						</div>
 					</div>
-				{/each}
-			{/if}
+				</div>
+			{/each}
+		{/if}
 			</div>
 		</div>
 	</SheetContent>

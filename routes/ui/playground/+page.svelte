@@ -13,6 +13,11 @@
 		type PlaygroundSession,
 		type Prompt
 	} from '$lib/models/external_modules/MoLOS-AI-Knowledge';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Textarea } from '$lib/components/ui/textarea';
+	import { NativeSelect, NativeSelectOption } from '$lib/components/ui/native-select';
+	import SessionSelector from '$lib/components/external_modules/MoLOS-AI-Knowledge/session-selector.svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
@@ -416,12 +421,13 @@
 	class="grid h-[100svh] w-full grid-rows-[auto_minmax(0,1fr)_auto] gap-0 lg:h-full lg:grid-cols-[260px_minmax(0,1fr)_420px] lg:grid-rows-1 lg:rounded-2xl lg:border"
 >
 	{#if pendingDeleteSession}
-		<button
-			class="fixed inset-0 z-40 backdrop-blur-sm"
+		<Button
+			variant="ghost"
+			class="fixed inset-0 z-40 h-full w-full backdrop-blur-sm"
 			type="button"
 			aria-label="Close delete confirmation"
 			onclick={cancelDeleteSession}
-		></button>
+		></Button>
 		<div
 			class="fixed left-1/2 top-1/2 z-50 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border/60 bg-card p-5 shadow-xl"
 			role="dialog"
@@ -436,33 +442,38 @@
 				This will remove "{sessionTitle(pendingDeleteSession)}" from your list.
 			</p>
 			<div class="mt-4 flex justify-end gap-2">
-				<button
+				<Button
+					variant="outline"
+					size="sm"
 					class="rounded-md px-3 py-2 text-sm"
 					type="button"
 					onclick={cancelDeleteSession}
 				>
 					Cancel
-				</button>
-				<button
-					class="rounded-md bg-destructive px-3 py-2 text-sm text-destructive-foreground"
+				</Button>
+				<Button
+					variant="destructive"
+					size="sm"
+					class="rounded-md px-3 py-2 text-sm"
 					type="button"
 					onclick={confirmDeleteSession}
 				>
 					Delete
-				</button>
+				</Button>
 			</div>
 		</div>
 	{/if}
 	{#if isPanelOpen}
-		<button
-			class="fixed inset-0 z-30 backdrop-blur-sm lg:hidden"
+		<Button
+			variant="ghost"
+			class="fixed inset-0 z-30 h-full w-full backdrop-blur-sm lg:hidden"
 			type="button"
 			aria-label="Close panels"
 			onclick={() => {
 				isSessionsOpen = false;
 				isSettingsOpen = false;
 			}}
-		></button>
+		></Button>
 	{/if}
 
 	<aside
@@ -474,103 +485,29 @@
 			class="sticky top-0 z-10 flex items-center justify-between px-4 py-3"
 		>
 			<h2 class="text-xs font-bold tracking-wider uppercase text-muted-foreground">Conversations</h2>
-			<button
+			<Button
+				variant="outline"
+				size="icon-sm"
 				class="p-1 text-sm transition rounded-xl border-border/60 bg-background/80 text-muted-foreground hover:bg-muted/30 hover:text-foreground"
 				type="button"
 				onclick={startNewConversation}
 			>
 				<Plus/>
-			</button>
+			</Button>
 		</div>
-		<div class="flex flex-col flex-1 gap-3 px-4 py-4 pr-3 overflow-y-auto">
-			<div
-				class={`rounded-2xl px-4 py-3 text-left text-sm transition-all ${
-					!selectedSessionId
-						? 'border-primary bg-primary/5'
-						: 'border-border/40 bg-background/70 hover:border-border/70 hover:bg-muted/30'
-				}`}
-			>
-				<button class="w-full text-left" type="button" onclick={startNewConversation}>
-					<div class="font-semibold">New conversation</div>
-					<div class="text-xs text-muted-foreground">Start from scratch</div>
-				</button>
-			</div>
-			{#each visibleSessions as session}
-				<div
-					class={`rounded-2xl px-4 py-3 transition-all ${
-						selectedSessionId === session.id
-							? 'border-primary bg-primary/5'
-							: 'border-border/40 bg-background/70 hover:border-border/70 hover:bg-muted/30'
-					}`}
-				>
-					<div class="flex items-start justify-between gap-2">
-						{#if editingSessionId === session.id}
-							<div class="flex-1 min-w-0">
-								<input
-									class="w-full h-8 px-2 text-sm rounded-md bg-background"
-									bind:value={renameDraft}
-								/>
-								<div class="mt-1 text-xs text-muted-foreground">
-									{session.model} • Tokens: {session.totalTokens} • ${session.totalCost}
-								</div>
-							</div>
-						{:else}
-							<button
-								class="flex-1 min-w-0 text-left"
-								type="button"
-								onclick={() => selectSession(session)}
-							>
-								<div class="text-sm font-semibold truncate">{sessionTitle(session)}</div>
-								<div class="mt-1 text-xs text-muted-foreground">
-									{session.model} • Tokens: {session.totalTokens} • ${session.totalCost}
-								</div>
-							</button>
-						{/if}
-						<div class="flex shrink-0 flex-col gap-2 text-[11px] text-muted-foreground">
-							{#if editingSessionId === session.id}
-								<button
-									class="px-2 py-1 rounded-md text-foreground"
-									type="button"
-									onclick={() => saveRename(session)}
-								>
-									Save
-								</button>
-								<button
-									class="px-2 py-1 rounded-md"
-									type="button"
-									onclick={cancelRename}
-								>
-									Cancel
-								</button>
-							{:else}
-								<button
-									class="px-2 py-1 rounded-md"
-									type="button"
-									onclick={() => beginRename(session)}
-								>
-									Rename
-								</button>
-								<button
-									class="px-2 py-1 rounded-md text-destructive"
-									type="button"
-									onclick={() => requestDeleteSession(session)}
-								>
-									Delete
-								</button>
-							{/if}
-						</div>
-					</div>
-				</div>
-			{/each}
-			{#if visibleSessions.length === 0}
-				<div
-					class="px-4 py-6 text-sm text-center border-dashed rounded-2xl border-border/50 bg-muted/20 text-muted-foreground"
-				>
-					No conversations yet.
-					<div class="mt-1 text-xs text-muted-foreground/60">Start one to see it here.</div>
-				</div>
-			{/if}
-		</div>
+		<SessionSelector
+			sessions={visibleSessions}
+			{selectedSessionId}
+			{editingSessionId}
+			bind:renameDraft
+			{sessionTitle}
+			{startNewConversation}
+			{selectSession}
+			{beginRename}
+			{cancelRename}
+			{saveRename}
+			{requestDeleteSession}
+		/>
 	</aside>
 
 	<div class="flex min-h-0 flex-col rounded-none bg-card h-[90vh]">
@@ -578,8 +515,10 @@
 			class="sticky top-0 z-20 flex items-center justify-between border-b border-border/60 bg-background/90 px-4 py-3 lg:hidden"
 		>
 			<div class="flex items-center gap-2 text-sm font-semibold">
-				<button
-					class="flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-background text-foreground transition hover:bg-muted"
+				<Button
+					variant="outline"
+					size="icon"
+					class="flex h-9 w-9 items-center justify-center rounded-full border-border/60 bg-background text-foreground transition hover:bg-muted"
 					type="button"
 					aria-label="Toggle conversations"
 					aria-expanded={isSessionsOpen}
@@ -589,11 +528,13 @@
 					}}
 				>
 					<Menu class="h-4 w-4" />
-				</button>
+				</Button>
 				<span>Playground</span>
 			</div>
-			<button
-				class="flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-background text-foreground transition hover:bg-muted"
+			<Button
+				variant="outline"
+				size="icon"
+				class="flex h-9 w-9 items-center justify-center rounded-full border-border/60 bg-background text-foreground transition hover:bg-muted"
 				type="button"
 				aria-label="Toggle settings"
 				aria-expanded={isSettingsOpen}
@@ -603,7 +544,7 @@
 				}}
 			>
 				<SlidersHorizontal class="h-4 w-4" />
-			</button>
+			</Button>
 		</div>
 
 		<div
@@ -628,7 +569,7 @@
 
 		<div class="px-4 py-4 sm:px-6 lg:border-t lg:border-border/60">
 			<div class="relative left-0 w-full">
-				<textarea
+				<Textarea
 					class="min-h-[120px] w-full rounded-2xl bg-background p-3 pb-12 text-sm sm:min-h-[140px]"
 					bind:value={playgroundMessage}
 					oninput={updateCostEstimate}
@@ -639,9 +580,10 @@
 						}
 					}}
 					placeholder="Type a message to test the prompt"
-				></textarea>
+				/>
 				<div class="absolute bottom-3 left-3 flex items-center gap-3">
-					<button
+					<Button
+						size="icon"
 						class="inline-flex items-center justify-center w-10 h-10 transition rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
 						aria-label="Send message"
 						disabled={!canSendMessage}
@@ -650,7 +592,7 @@
 						}}
 					>
 						<Send class="w-4 h-4" />
-					</button>
+					</Button>
 					<div class="text-xs text-muted-foreground">
 						{isSending
 							? 'Sending…'
@@ -687,24 +629,27 @@
 					Prompt, provider & model
 				</div>
 				<div class="grid gap-3 mt-3">
-					<select class="h-10 px-3 text-sm rounded-md bg-background" bind:value={playgroundPromptId}>
-						<option value="">Select saved prompt</option>
+					<NativeSelect
+						class="h-10 px-3 text-sm rounded-md bg-background"
+						bind:value={playgroundPromptId}
+					>
+						<NativeSelectOption value="">Select saved prompt</NativeSelectOption>
 						{#each prompts as prompt}
-							<option value={prompt.id}>{prompt.title}</option>
+							<NativeSelectOption value={prompt.id}>{prompt.title}</NativeSelectOption>
 						{/each}
-					</select>
-					<select
+					</NativeSelect>
+					<NativeSelect
 						class="h-10 px-3 text-sm rounded-md bg-background"
 						bind:value={selectedModelId}
 						onchange={updateCostEstimate}
 					>
 						{#each modelOptions as option}
-							<option value={option}>{option}</option>
+							<NativeSelectOption value={option}>{option}</NativeSelectOption>
 						{/each}
-						<option value="custom">Custom...</option>
-					</select>
+						<NativeSelectOption value="custom">Custom...</NativeSelectOption>
+					</NativeSelect>
 					{#if selectedModelId === 'custom'}
-						<input
+						<Input
 							class="h-10 px-3 text-sm rounded-md bg-background"
 							bind:value={customModelId}
 							oninput={updateCostEstimate}
@@ -720,7 +665,7 @@
 					{/if}
 					<label class="text-xs text-muted-foreground">
 						Max tokens
-						<input
+						<Input
 							class="w-full px-3 mt-2 rounded-md h-9 bg-background"
 							type="number"
 							bind:value={playgroundTokens}

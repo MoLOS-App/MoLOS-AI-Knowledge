@@ -9,6 +9,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { NativeSelect, NativeSelectOption } from '$lib/components/ui/native-select';
 	import { ArrowLeft, Save, Bot } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
@@ -106,15 +107,15 @@
 				<CardContent class="space-y-4">
 					<div class="space-y-2">
 						<Label for="provider">AI Provider</Label>
-						<select
+						<NativeSelect
 							id="provider"
 							bind:value={provider}
 							class="border-input placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							{#each providers as p (p.value)}
-								<option value={p.value}>{p.label}</option>
+								<NativeSelectOption value={p.value}>{p.label}</NativeSelectOption>
 							{/each}
-						</select>
+						</NativeSelect>
 						<p class="text-muted-foreground text-[10px]">
 							This setting only affects models and requests inside AI Knowledge.
 						</p>
@@ -127,9 +128,6 @@
 							bind:value={apiToken}
 							placeholder="Enter provider token"
 						/>
-						<p class="text-muted-foreground text-[10px]">
-							The token is stored locally for this module.
-						</p>
 					</div>
 					<div class="space-y-2">
 						<Label>Preconfigured Models</Label>
@@ -140,13 +138,15 @@
 								</div>
 							{:else}
 								{#each preconfiguredModels as model}
-									<button
+									<Button
 										type="button"
-										class="rounded-full border px-3 py-1 text-xs"
+										variant="outline"
+										size="sm"
+										class="rounded-full px-3 py-1 text-xs"
 										onclick={() => removeModel(model)}
 									>
 										{model} ✕
-									</button>
+									</Button>
 								{/each}
 							{/if}
 						</div>
@@ -161,13 +161,15 @@
 									}
 								}}
 							/>
-							<button
+							<Button
 								type="button"
-								class="rounded-md border px-4 py-2 text-sm"
+								variant="outline"
+								size="sm"
+								class="rounded-md px-4 py-2 text-sm"
 								onclick={addModel}
 							>
 								Add model
-							</button>
+							</Button>
 						</div>
 						<p class="text-muted-foreground text-[10px]">
 							These appear first in the playground model picker.
@@ -177,7 +179,12 @@
 			</Card>
 
 			<div class="flex justify-end">
-				<Button onclick={handleSave} disabled={isSaving} class="rounded-xl px-8 font-bold">
+				<Button
+					size="sm"
+					onclick={handleSave}
+					disabled={isSaving}
+					class="rounded-xl px-6 font-bold"
+				>
 					{#if isSaving}
 						Saving...
 					{:else}

@@ -3,6 +3,10 @@
 	import { invalidateAll } from '$app/navigation';
 	import { deleteHumanizerJob } from '$lib/stores/external_modules/MoLOS-AI-Knowledge/api';
 	import { Copy, Loader2, Trash2 } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Textarea } from '$lib/components/ui/textarea';
+	import { NativeSelect, NativeSelectOption } from '$lib/components/ui/native-select';
 	import {
 		HumanizationLevel,
 		HumanizationTone,
@@ -117,12 +121,13 @@
 
 <div class="space-y-8 lg:h-full lg:min-h-[80vh]">
 	{#if pendingDeleteJob}
-		<button
-			class="fixed inset-0 z-40 backdrop-blur-sm "
+		<Button
+			variant="ghost"
+			class="fixed inset-0 z-40 h-full w-full backdrop-blur-sm"
 			type="button"
 			aria-label="Close delete confirmation"
 			onclick={cancelDeleteJob}
-		></button>
+		></Button>
 		<div
 			class="fixed left-1/2 top-1/2 z-50 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border/60 bg-card p-5 shadow-xl"
 			role="dialog"
@@ -136,16 +141,24 @@
 				your list.
 			</p>
 			<div class="mt-4 flex justify-end gap-2">
-				<button class="rounded-md px-3 py-2 text-sm" type="button" onclick={cancelDeleteJob}>
+				<Button
+					variant="outline"
+					size="sm"
+					class="rounded-md px-3 py-2 text-sm"
+					type="button"
+					onclick={cancelDeleteJob}
+				>
 					Cancel
-				</button>
-				<button
-					class="rounded-md bg-destructive px-3 py-2 text-sm text-destructive-foreground"
+				</Button>
+				<Button
+					variant="destructive"
+					size="sm"
+					class="rounded-md px-3 py-2 text-sm"
 					type="button"
 					onclick={confirmDeleteJob}
 				>
 					Delete
-				</button>
+				</Button>
 			</div>
 		</div>
 	{/if}
@@ -186,21 +199,23 @@
 							AI Text
 						</div>
 						<div class="flex flex-wrap items-center gap-2">
-							<button
-								class="h-9 rounded-full px-3 text-xs font-medium text-foreground hover:text-primary"
+							<Button
+								variant="ghost"
+								size="sm"
+								class="h-8 rounded-full px-3 text-xs font-medium text-foreground hover:text-primary"
 								type="button"
 								onclick={clearInput}
 							>
 								Clear
-							</button>
+							</Button>
 						</div>
 					</div>
-					<textarea
+					<Textarea
 						class="w-full flex-1 rounded-2xl border-0 bg-background p-4 text-sm leading-relaxed"
 						bind:value={humanizerInput}
 						name="inputText"
 						placeholder="Paste or type your AI-generated text here..."
-					></textarea>
+					/>
 				</div>
 
 				<div class="flex min-h-0 flex-1 flex-col gap-3">
@@ -209,25 +224,31 @@
 					>
 						<span>Humanized</span>
 						<div class="flex items-center gap-2">
-							<select
+							<NativeSelect
 								class="h-9 rounded-full border-0 bg-background px-3 text-xs text-foreground"
 								bind:value={humanizerLevel}
 								name="level"
 							>
 								{#each levelOptions as option}
-									<option value={option}>{option.charAt(0).toUpperCase() + option.slice(1)}</option>
+									<NativeSelectOption value={option}>
+										{option.charAt(0).toUpperCase() + option.slice(1)}
+									</NativeSelectOption>
 								{/each}
-							</select>
-							<select
+							</NativeSelect>
+							<NativeSelect
 								class="h-9 rounded-full border-0 bg-background px-3 text-xs text-foreground"
 								bind:value={humanizerTone}
 								name="tone"
 							>
 								{#each toneOptions as option}
-									<option value={option}>{option.charAt(0).toUpperCase() + option.slice(1)}</option>
+									<NativeSelectOption value={option}>
+										{option.charAt(0).toUpperCase() + option.slice(1)}
+									</NativeSelectOption>
 								{/each}
-							</select>
-							<button
+							</NativeSelect>
+							<Button
+								variant="outline"
+								size="icon-sm"
 								class="rounded-full border px-2 py-1 text-foreground transition hover:text-primary"
 								onclick={copyOutput}
 								type="button"
@@ -235,15 +256,15 @@
 								title={didCopy ? 'Copied' : 'Copy output'}
 							>
 								<Copy size={14} />
-							</button>
+							</Button>
 						</div>
 					</div>
 					<div class="relative min-h-0 flex-1">
-						<textarea
+						<Textarea
 							class="h-full w-full rounded-2xl border-0 bg-background p-4 text-sm leading-relaxed"
 							bind:value={humanizerOutput}
 							placeholder="Your humanized output appears here..."
-						></textarea>
+						/>
 						{#if isHumanizing}
 							<div class="absolute inset-0 flex items-center justify-center rounded-2xl bg-background/70">
 								<Loader2 class="h-6 w-6 animate-spin text-primary" />
@@ -256,13 +277,14 @@
 				</div>
 			</div>
 
-					<button
-						class="w-full rounded-2xl bg-primary px-8 py-4 mt-6 text-base font-semibold text-primary-foreground shadow-lg transition disabled:opacity-60 sm:text-lg"
+					<Button
+						size="default"
+						class="mt-6 w-full rounded-2xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg transition disabled:opacity-60 sm:text-base"
 						type="submit"
 						disabled={!humanizerInput.trim() || isHumanizing}
 					>
 						{isHumanizing ? 'Humanizing...' : 'Humanize'}
-					</button>
+					</Button>
 					
 			<hr class="my-4 border-dashed"/>
 			<details class="rounded-2xl border bg-muted/10 p-3 text-xs text-muted-foreground">
@@ -274,22 +296,22 @@
 								<span class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 									Model
 								</span>
-								<select
+								<NativeSelect
 									class="h-9 rounded-full border bg-background px-3 text-xs text-foreground"
 									bind:value={selectedModelId}
 								>
 									{#each modelOptions as option}
-										<option value={option}>{option}</option>
+										<NativeSelectOption value={option}>{option}</NativeSelectOption>
 									{/each}
-									<option value="custom">Custom</option>
-								</select>
+									<NativeSelectOption value="custom">Custom</NativeSelectOption>
+								</NativeSelect>
 							</label>
 							<label class="flex flex-col gap-1">
 								<span class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 									Custom model
 								</span>
 								{#if selectedModelId === 'custom'}
-									<input
+									<Input
 										class="h-9 rounded-full border bg-background px-3 text-xs text-foreground"
 										placeholder="e.g. gpt-4o-mini"
 										bind:value={customModelId}
@@ -387,11 +409,11 @@
 								<span class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 									Custom prompt note
 								</span>
-								<textarea
+								<Textarea
 									class="min-h-[80px] w-full rounded-2xl border bg-background p-3 text-xs text-foreground"
 									placeholder="Add any extra instruction for the humanizer prompt (e.g. keep it punchy, avoid jargon)."
 									name="options"
-								></textarea>
+								/>
 							</label>
 						</div>
 					</details>
@@ -405,7 +427,7 @@
 						class="cursor-pointer rounded-xl border p-3 transition hover:border-border/70 hover:bg-muted/20"
 						onclick={() => loadJob(job)}
 					>
-					<div class="flex items-start justify-between gap-2">
+						<div class="flex items-start justify-between gap-2">
 						<div class="flex-1">
 							<div class="text-sm font-semibold line-clamp-2">
 								{job.outputText ?? job.inputText}
@@ -415,7 +437,9 @@
 								<span class="rounded-full border px-2 py-0.5">{job.level}</span>
 							</div>
 						</div>
-						<button
+						<Button
+							variant="outline"
+							size="icon-sm"
 							class="rounded-full border p-2 text-muted-foreground transition hover:text-foreground"
 							aria-label="Delete job"
 							type="button"
@@ -425,7 +449,7 @@
 								}}
 							>
 								<Trash2 size={14} />
-							</button>
+							</Button>
 						</div>
 					</div>
 				{/each}
