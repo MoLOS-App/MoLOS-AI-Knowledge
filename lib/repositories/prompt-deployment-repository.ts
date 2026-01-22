@@ -1,7 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { promptDeployments } from "$lib/server/db/schema/external_modules/MoLOS-AI-Knowledge/tables";
 import type { PromptDeployment } from "$lib/models/external_modules/MoLOS-AI-Knowledge";
-import { BaseRepository } from "$lib/repositories/base-repository";
+import { BaseRepository } from "./base-repository";
 
 export class PromptDeploymentRepository extends BaseRepository {
   private mapRow(row: typeof promptDeployments.$inferSelect): PromptDeployment {

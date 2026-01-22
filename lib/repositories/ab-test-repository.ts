@@ -1,7 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { abTests } from "$lib/server/db/schema/external_modules/MoLOS-AI-Knowledge/tables";
 import type { AbTest, CreateAbTestInput, UpdateAbTestInput } from "$lib/models/external_modules/MoLOS-AI-Knowledge";
-import { BaseRepository } from "$lib/repositories/base-repository";
+import { BaseRepository } from "./base-repository";
 import { toJsonString } from "./utils";
 
 export class AbTestRepository extends BaseRepository {

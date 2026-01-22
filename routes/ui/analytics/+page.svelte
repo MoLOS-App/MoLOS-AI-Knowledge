@@ -1,57 +1,10 @@
-<script lang="ts">
-	export let data;
-
-	let analytics = [];
-	$: ({ analytics } = data);
-</script>
-
-<div class="space-y-6">
-	<section class="rounded-2xl border bg-card p-6">
-		<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-			<div>
-				<h2 class="text-2xl font-semibold tracking-tight">Analytics</h2>
-				<p class="text-sm text-muted-foreground">
-					Track usage signals and performance metrics across the module.
-				</p>
-			</div>
-			<div class="text-xs text-muted-foreground">Metrics refresh on page load.</div>
-		</div>
-	</section>
-
-	<section class="rounded-2xl border bg-card p-6">
-		<h3 class="text-lg font-semibold">Metric Cards</h3>
-		<div class="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-			{#each analytics as metric}
-				<div class="rounded-xl border p-4">
-					<div class="text-xs uppercase text-muted-foreground">{metric.metricType}</div>
-					<div class="text-lg font-semibold">{metric.value}</div>
-					<div class="text-xs text-muted-foreground">{metric.entityType}</div>
-				</div>
-			{/each}
-			{#if analytics.length === 0}
-				<div class="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-					Analytics will appear after activity is recorded.
-				</div>
-			{/if}
-		</div>
-	</section>
-
-	<section class="rounded-2xl border bg-card p-6">
-		<h3 class="text-lg font-semibold">Recent Usage</h3>
-		<div class="mt-4 space-y-3">
-			{#each analytics as metric}
-				<div class="rounded-xl border p-4">
-					<div class="text-sm font-semibold">{metric.entityType}</div>
-					<div class="text-xs text-muted-foreground">
-						{metric.metricType} • {metric.value}
-					</div>
-				</div>
-			{/each}
-			{#if analytics.length === 0}
-				<div class="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-					No usage records yet.
-				</div>
-			{/if}
-		</div>
-	</section>
+<div class="flex min-h-[60vh] items-center justify-center px-4 py-12">
+  <section class="w-full max-w-3xl rounded-2xl border border-dashed bg-card p-8 text-center">
+    <p class="text-xs font-semibold uppercase tracking-[0.3em] text-sky-500">Under development</p>
+    <h1 class="mt-4 text-2xl font-semibold">Analytics experience coming soon</h1>
+    <p class="mt-3 text-sm text-muted-foreground">
+      Analytics tracking for this module is still under heavy development. We&apos;re refining the metrics
+      surface before releasing it for regular use. Check back once the groundwork is complete.
+    </p>
+  </section>
 </div>

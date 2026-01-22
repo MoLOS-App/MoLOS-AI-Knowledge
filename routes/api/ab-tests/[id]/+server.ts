@@ -10,7 +10,7 @@ const UpdateSchema = z.object({
   promptIdsJson: z.string().optional(),
   datasetJson: z.string().optional(),
   resultsJson: z.string().optional(),
-  status: z.enum(Object.values(AbTestStatus) as [string, ...string[]]).optional(),
+  status: z.nativeEnum(AbTestStatus).optional(),
 });
 
 export const PUT: RequestHandler = async ({ locals, params, request }) => {

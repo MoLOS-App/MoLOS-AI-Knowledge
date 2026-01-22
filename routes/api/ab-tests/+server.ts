@@ -10,7 +10,7 @@ const CreateSchema = z.object({
   promptIdsJson: z.string().min(2),
   datasetJson: z.string().min(2),
   resultsJson: z.string().optional().default("{}"),
-  status: z.enum(Object.values(AbTestStatus) as [string, ...string[]]).default(AbTestStatus.DRAFT),
+  status: z.nativeEnum(AbTestStatus).default(AbTestStatus.DRAFT),
 });
 
 export const GET: RequestHandler = async ({ locals }) => {
