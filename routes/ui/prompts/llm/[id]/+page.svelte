@@ -191,24 +191,24 @@
 	<header class="rounded-[28px] border bg-card/80 p-6 shadow-sm" in:fly={{ y: 12, duration: 220 }}>
 		<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 			<div class="space-y-2">
-				<Input
+<input
 					class="w-full border-transparent bg-transparent text-2xl font-semibold tracking-tight outline-none placeholder:text-muted-foreground focus:border-b focus:border-foreground/20 sm:max-w-2xl"
 					bind:value={llmTitle}
 					placeholder="Untitled LLM.txt"
 				/>
-				<Textarea
+				<textarea
 					class="w-full resize-none border-transparent bg-transparent text-sm text-muted-foreground outline-none placeholder:text-muted-foreground focus:border-b focus:border-foreground/20 sm:max-w-2xl"
 					bind:value={llmLabel}
 					placeholder="Add a short description"
-					rows={2}
-				/>
+					rows={1}
+				></textarea>
 			</div>
 			<div class="flex flex-wrap items-center gap-3 sm:justify-end">
 				<Button
 					variant="outline"
 					size="sm"
 					class="rounded-full px-4 py-2 text-xs font-semibold"
-					on:click={() => goto('/ui/MoLOS-AI-Knowledge/prompts')}
+					onclick={() => goto('/ui/MoLOS-AI-Knowledge/prompts')}
 				>
 					Go back
 				</Button>
@@ -242,7 +242,7 @@
 					variant="outline"
 					size="sm"
 					class="mt-4 w-full rounded-full px-3 py-2 text-xs font-semibold"
-					on:click={() => {
+					onclick={() => {
 						versionsOpen = true;
 					}}
 				>
@@ -261,7 +261,7 @@
 					<Button
 						size="sm"
 						class="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background"
-						on:click={saveLlmFile}
+						onclick={saveLlmFile}
 					>
 						{isNew ? 'Create LLM.txt' : 'Save changes'}
 					</Button>
@@ -275,7 +275,7 @@
 						variant="outline"
 						size="sm"
 						class="rounded-full px-3 py-2 text-xs font-semibold"
-						on:click={shareLlmFile}
+						onclick={shareLlmFile}
 						disabled={!fileId}
 					>
 						Share LLM.txt
@@ -284,7 +284,7 @@
 						variant="outline"
 						size="sm"
 						class="rounded-full px-3 py-2 text-xs font-semibold text-destructive"
-						on:click={deleteLlmFile}
+						onclick={deleteLlmFile}
 						disabled={!fileId}
 					>
 						Delete LLM.txt
@@ -324,7 +324,7 @@
 								variant="outline"
 								size="sm"
 								class="rounded-full px-2 py-1"
-								on:click={() => viewVersion(version)}
+								onclick={() => viewVersion(version)}
 							>
 								View
 							</Button>
@@ -332,7 +332,7 @@
 								variant="outline"
 								size="sm"
 								class="rounded-full px-2 py-1"
-								on:click={() => restoreVersion(version)}
+								onclick={() => restoreVersion(version)}
 							>
 								Restore
 							</Button>
@@ -340,7 +340,7 @@
 								variant="outline"
 								size="sm"
 								class="rounded-full px-2 py-1"
-								on:click={() => removeVersion(version)}
+								onclick={() => removeVersion(version)}
 								disabled={deletingVersionId === version.id}
 							>
 								Delete

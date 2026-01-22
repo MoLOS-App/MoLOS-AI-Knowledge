@@ -189,24 +189,24 @@
 	<header class="rounded-[28px] border bg-card/80 p-6 shadow-sm" in:fly={{ y: 12, duration: 220 }}>
 		<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 			<div class="space-y-2">
-				<Input
+				<input
 					class="w-full bg-transparent text-2xl font-semibold tracking-tight outline-none placeholder:text-muted-foreground border-b focus:border-foreground border-foreground/20 sm:max-w-2xl"
 					bind:value={promptTitle}
 					placeholder="Untitled prompt"
 				/>
-				<Textarea
+				<textarea
 					class="w-full resize-none bg-transparent text-sm text-muted-foreground outline-none placeholder:text-muted-foreground border-b focus:border-foreground border-foreground/20 sm:max-w-2xl"
 					bind:value={promptDescription}
 					placeholder="Add a short description"
 					rows={1}
-				/>
+				></textarea>
 			</div>
 			<div class="flex flex-wrap items-center gap-3 sm:justify-end">
 				<Button
 					variant="outline"
 					size="sm"
 					class="rounded-full px-4 py-2 text-md font-semibold"
-					on:click={() => goto('/ui/MoLOS-AI-Knowledge/prompts')}
+					onclick={() => goto('/ui/MoLOS-AI-Knowledge/prompts')}
 				>
 					Go back
 				</Button>
@@ -242,7 +242,7 @@
 					<Button
 						size="sm"
 						class="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background"
-						on:click={savePrompt}
+						onclick={savePrompt}
 					>
 						{isNew ? 'Create prompt' : 'Save changes'}
 					</Button>
@@ -259,7 +259,7 @@
 					variant="outline"
 					size="sm"
 					class="mt-4 w-full rounded-full px-3 py-2 text-xs font-semibold"
-					on:click={() => {
+					onclick={() => {
 						versionsOpen = true;
 					}}
 				>
@@ -274,7 +274,7 @@
 						variant="outline"
 						size="sm"
 						class="rounded-full px-3 py-2 text-xs font-semibold"
-						on:click={sharePrompt}
+						onclick={sharePrompt}
 						disabled={!promptId}
 					>
 						Share prompt
@@ -283,7 +283,7 @@
 						variant="outline"
 						size="sm"
 						class="rounded-full px-3 py-2 text-xs font-semibold text-destructive"
-						on:click={deletePromptItem}
+						onclick={deletePromptItem}
 						disabled={!promptId}
 					>
 						Delete prompt
@@ -323,7 +323,7 @@
 								variant="outline"
 								size="sm"
 								class="rounded-full px-2 py-1"
-								on:click={() => viewVersion(version)}
+								onclick={() => viewVersion(version)}
 							>
 								View
 							</Button>
@@ -331,7 +331,7 @@
 								variant="outline"
 								size="sm"
 								class="rounded-full px-2 py-1"
-								on:click={() => restoreVersion(version)}
+								onclick={() => restoreVersion(version)}
 							>
 								Restore
 							</Button>
@@ -339,7 +339,7 @@
 								variant="outline"
 								size="sm"
 								class="rounded-full px-2 py-1"
-								on:click={() => removeVersion(version)}
+								onclick={() => removeVersion(version)}
 								disabled={deletingVersionId === version.id}
 							>
 								Delete
