@@ -88,9 +88,6 @@
 		'claude-haiku-4-5': { input: 0.002, output: 0.006 },
 		'gemini-pro': { input: 0.0025, output: 0.005 }
 	};
-	const allowedModelTargets = new Set(defaultModels);
-	const normalizeModelForStorage = (model: string) =>
-		allowedModelTargets.has(model) ? model : 'gpt-4';
 
 	const estimateTokens = (text: string) => Math.ceil(text.split(/\s+/).length / 0.75);
 	const estimateConversationTokens = (messages: { content: string }[]) =>
@@ -188,7 +185,7 @@
 		};
 		const payload = {
 			promptId: playgroundPromptId || undefined,
-			model: normalizeModelForStorage(playgroundModel),
+			model: playgroundModel,
 			settingsJson: JSON.stringify(settingsPayload),
 			messagesJson: JSON.stringify(playgroundMessages),
 			totalTokens: playgroundTokenEstimate,
