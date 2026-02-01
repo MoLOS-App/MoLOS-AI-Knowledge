@@ -3,6 +3,7 @@ import {
 	prompts,
 	promptVersions
 } from '$lib/server/db/schema/external_modules/MoLOS-AI-Knowledge/tables';
+import type { Prompt } from '$lib/models/external_modules/MoLOS-AI-Knowledge';
 import type {
 	CreatePromptInput,
 	Prompt,
@@ -66,6 +67,28 @@ export class PromptRepository extends BaseRepository {
 			.select()
 			.from(prompts)
 			.where(and(...conditions))
+			.orderBy(desc(prompts.updatedAt));
+
+		return results.map((row) => this.mapPrompt(row));
+	}
+
+	async searchByUserId(userId: string, query: string, limit = 20): Promise<Prompt[]> {
+		const term = `%${query}%`;
+		const results = await this.db
+			.select()
+			.from(prompts)
+			.where(
+				and(
+					eq(prompts.userId, userId),
+					eq(prompts.isDeleted, false),
+					or(
+						like(prompts.title, term),
+						like(sql<string>`coalesce(${prompts.description}, '')`, term),
+						like(prompts.content, term)
+					)
+				)
+			)
+			.limit(limit)
 			.orderBy(desc(prompts.updatedAt));
 
 		return results.map((row) => this.mapPrompt(row));

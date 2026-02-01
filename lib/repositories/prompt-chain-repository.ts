@@ -1,4 +1,4 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, like, or, sql } from 'drizzle-orm';
 import { promptChains } from '$lib/server/db/schema/external_modules/MoLOS-AI-Knowledge/tables';
 import type {
 	CreatePromptChainInput,
@@ -22,6 +22,26 @@ export class PromptChainRepository extends BaseRepository {
 			.select()
 			.from(promptChains)
 			.where(eq(promptChains.userId, userId))
+			.orderBy(desc(promptChains.updatedAt));
+
+		return results.map((row) => this.mapChain(row));
+	}
+
+	async searchByUserId(userId: string, query: string, limit = 20): Promise<PromptChain[]> {
+		const term = `%${query}%`;
+		const results = await this.db
+			.select()
+			.from(promptChains)
+			.where(
+				and(
+					eq(promptChains.userId, userId),
+					or(
+						like(promptChains.name, term),
+						like(sql<string>`coalesce(${promptChains.description}, '')`, term)
+					)
+				)
+			)
+			.limit(limit)
 			.orderBy(desc(promptChains.updatedAt));
 
 		return results.map((row) => this.mapChain(row));

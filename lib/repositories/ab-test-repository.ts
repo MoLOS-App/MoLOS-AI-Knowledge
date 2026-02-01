@@ -1,4 +1,4 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, like } from 'drizzle-orm';
 import { abTests } from '$lib/server/db/schema/external_modules/MoLOS-AI-Knowledge/tables';
 import type {
 	AbTest,
@@ -18,6 +18,18 @@ export class AbTestRepository extends BaseRepository {
 			.select()
 			.from(abTests)
 			.where(eq(abTests.userId, userId))
+			.orderBy(desc(abTests.updatedAt));
+
+		return results.map((row) => this.mapTest(row));
+	}
+
+	async searchByUserId(userId: string, query: string, limit = 20): Promise<AbTest[]> {
+		const term = `%${query}%`;
+		const results = await this.db
+			.select()
+			.from(abTests)
+			.where(and(eq(abTests.userId, userId), like(abTests.name, term)))
+			.limit(limit)
 			.orderBy(desc(abTests.updatedAt));
 
 		return results.map((row) => this.mapTest(row));

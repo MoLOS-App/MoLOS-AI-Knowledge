@@ -1,4 +1,4 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, like, or } from 'drizzle-orm';
 import {
 	llmFiles,
 	llmFileVersions
@@ -29,6 +29,24 @@ export class LlmFileRepository extends BaseRepository {
 			.select()
 			.from(llmFiles)
 			.where(and(eq(llmFiles.userId, userId), eq(llmFiles.isDeleted, false)))
+			.orderBy(desc(llmFiles.updatedAt));
+
+		return results.map((row) => this.mapFile(row));
+	}
+
+	async searchByUserId(userId: string, query: string, limit = 20): Promise<LlmFile[]> {
+		const term = `%${query}%`;
+		const results = await this.db
+			.select()
+			.from(llmFiles)
+			.where(
+				and(
+					eq(llmFiles.userId, userId),
+					eq(llmFiles.isDeleted, false),
+					like(llmFiles.title, term)
+				)
+			)
+			.limit(limit)
 			.orderBy(desc(llmFiles.updatedAt));
 
 		return results.map((row) => this.mapFile(row));
