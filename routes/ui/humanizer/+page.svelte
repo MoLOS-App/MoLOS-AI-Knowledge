@@ -178,9 +178,11 @@
 					humanizerOutput = payload.outputText ?? '';
 					humanizerScore = payload.confidenceScore ?? 0;
 					await invalidateAll();
-				} else {
+				} else if (result.type === 'failure') {
 					const payload = result.data as { message?: string };
 					humanizerError = payload?.message ?? 'Humanizer failed. Please try again.';
+				} else {
+					humanizerError = 'Humanizer failed. Please try again.';
 				}
 			};
 		}}
@@ -457,8 +459,9 @@
 				<h3 class="text-lg font-semibold lg:text-xl">Recent Jobs</h3>
 				<div class="mt-4 flex-1 space-y-3 overflow-y-auto scroll-smooth">
 					{#each jobs as job}
-						<div
-							class="cursor-pointer rounded-xl border-2 border-border/60 p-3 transition-all duration-200 hover:border-border/70 hover:bg-muted/20"
+						<button
+							type="button"
+							class="w-full cursor-pointer rounded-xl border-2 border-border/60 p-3 text-left transition-all duration-200 hover:border-border/70 hover:bg-muted/20"
 							onclick={() => loadJob(job)}
 						>
 							<div class="flex items-start justify-between gap-2">
@@ -487,7 +490,7 @@
 									<Trash2 size={14} />
 								</Button>
 							</div>
-						</div>
+						</button>
 					{/each}
 					{#if jobs.length === 0}
 						<div class="text-muted-foreground rounded-xl border border-dashed p-6 text-sm">

@@ -148,8 +148,9 @@
 		tick().then(scrollMessagesToBottom);
 	}
 
-	const updateCostEstimate = (text = playgroundMessage) => {
-		const tokens = estimateTokens(text);
+	const updateCostEstimate = (text?: string | Event) => {
+		const textValue = typeof text === 'string' ? text : playgroundMessage;
+		const tokens = estimateTokens(textValue);
 		playgroundTokenEstimate = tokens;
 		const rate = pricing[playgroundModel] ?? pricing['gpt-4'];
 		const inputCost = (tokens / 1000) * rate.input;
@@ -551,7 +552,6 @@
 				{#each playgroundMessages as message, index (index)}
 					<article
 						class="rounded-2xl border border-border/60 bg-background p-4 text-sm transition-colors duration-150 hover:border-border"
-						role="article"
 					>
 						<div class="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
 							{message.role}

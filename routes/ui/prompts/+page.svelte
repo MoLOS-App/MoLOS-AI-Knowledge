@@ -184,8 +184,9 @@
 		</div>
 		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
 			{#each visiblePrompts as prompt, index (prompt.id)}
-				<article
-					class="cursor-pointer rounded-2xl border bg-card/80 p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg lg:p-6"
+				<button
+					type="button"
+					class="w-full cursor-pointer rounded-2xl border bg-card/80 p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg lg:p-6"
 					onclick={() => openEditPrompt(prompt)}
 					in:fly={{ y: 12, duration: 220, delay: index * 20 }}
 					animate:flip
@@ -213,7 +214,7 @@
 							{/each}
 						</div>
 					{/if}
-				</article>
+				</button>
 			{/each}
 			{#if visiblePrompts.length === 0}
 				<div
@@ -235,8 +236,9 @@
 		</div>
 		<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
 			{#each visibleFiles as file, index (file.id)}
-				<article
-					class="cursor-pointer rounded-2xl border bg-card/80 p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg lg:p-6"
+				<button
+					type="button"
+					class="w-full cursor-pointer rounded-2xl border bg-card/80 p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg lg:p-6"
 					onclick={() => openEditLlmFile(file)}
 					in:fly={{ y: 12, duration: 220, delay: index * 20 }}
 					animate:flip
@@ -254,7 +256,7 @@
 					<p class="text-muted-foreground mt-3 text-xs">
 						Instruction set for {file.title}.
 					</p>
-				</article>
+				</button>
 			{/each}
 			{#if visibleFiles.length === 0}
 				<div

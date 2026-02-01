@@ -16,9 +16,9 @@
 	import { AiProvider } from '$lib/models/external_modules/MoLOS-AI-Knowledge';
 	import type { PageData } from './$types';
 
-	const { data } = $props<PageData>();
+	let { data }: { data: PageData } = $props();
 
-	let provider = $state(AiProvider.OPENAI);
+	let provider = $state<string>(AiProvider.OPENAI);
 	let apiToken = $state('');
 	let preconfiguredModels = $state<string[]>([]);
 	let newModel = $state('');

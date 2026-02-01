@@ -43,11 +43,16 @@ export const load: PageServerLoad = async ({ fetch }) => {
 	};
 };
 
-const optionalNumber = (schema: z.ZodNumber) =>
-	z.preprocess((value) => {
-		if (value === '' || value === null || value === undefined) return undefined;
-		return value;
-	}, schema.optional());
+const optionalNumber = (schema: z.ZodNumber | z.ZodEffectsAny) =>
+	z.preprocess(
+		(value) => {
+			if (value === '' || value === null || value === undefined) return undefined;
+			return value;
+		},
+		'_def' in schema && schema._def.typeName === 'ZodEffects'
+			? (schema as z.ZodEffectsAny)._def.schema.optional()
+			: schema.optional()
+	);
 
 const HumanizeSchema = z.object({
 	inputText: z.string().min(1),

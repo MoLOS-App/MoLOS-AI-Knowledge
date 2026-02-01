@@ -37,9 +37,11 @@ type ProviderResponse = {
 	usage?: ProviderUsage;
 };
 
-const normalizeMessages = (messages: Array<z.infer<typeof MessageSchema>>) =>
+const normalizeMessages = (
+	messages: Array<z.infer<typeof MessageSchema>>
+): Array<{ role: 'user' | 'assistant' | 'system'; content: string }> =>
 	messages.map((msg) => ({
-		role: msg.role,
+		role: msg.role as 'user' | 'assistant' | 'system',
 		content: msg.content
 	}));
 
@@ -186,9 +188,9 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 		systemPrompt = prompt?.content?.trim() || undefined;
 	}
 
-	const messages = systemPrompt
-		? [{ role: 'system', content: systemPrompt }, ...payload.messages]
-		: payload.messages;
+	const messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }> = systemPrompt
+		? [{ role: 'system' as const, content: systemPrompt }, ...normalizeMessages(payload.messages)]
+		: normalizeMessages(payload.messages);
 
 	const start = Date.now();
 	const result = await callProvider(
