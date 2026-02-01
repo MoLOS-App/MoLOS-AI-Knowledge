@@ -18,48 +18,48 @@
 
 <div class="flex flex-col flex-1 gap-2 px-4 py-4 pr-3 overflow-y-auto">
 	<div
-		class={`rounded-xl px-3 py-2 text-left text-sm transition ${
+		class={`rounded-xl px-4 py-3 min-h-[56px] text-left text-sm transition-all duration-200 ${
 			!selectedSessionId
-				? 'bg-muted/40 text-foreground'
-				: 'text-muted-foreground hover:text-foreground hover:bg-muted/20'
+				? 'bg-primary/10 text-foreground border-2 border-primary/30 shadow-sm'
+				: 'text-muted-foreground hover:text-foreground hover:bg-muted/20 border-2 border-transparent'
 		}`}
 	>
 		<Button
 			variant="ghost"
 			size="sm"
-			class="w-full justify-start text-left gap-2"
+			class="w-full justify-start text-left gap-2 min-h-[44px]"
 			type="button"
 			onclick={startNewConversation}
 		>
-			<span class="inline-flex h-1.5 w-1.5 rounded-full bg-primary/60"></span>
+			<span class="inline-flex h-2 w-2 rounded-full bg-primary/60"></span>
 			<div class="text-xs font-semibold">New conversation</div>
 		</Button>
 	</div>
 
 	{#each sessions as session}
 		<div
-			class={`rounded-xl px-3 py-2 transition ${
+			class={`rounded-xl px-4 py-3 min-h-[56px] transition-all duration-200 ${
 				selectedSessionId === session.id
-					? 'bg-muted/40 text-foreground'
-					: 'text-muted-foreground hover:text-foreground hover:bg-muted/20'
+					? 'bg-primary/10 text-foreground border-2 border-primary/30 shadow-sm'
+					: 'text-muted-foreground hover:text-foreground hover:bg-muted/20 border-2 border-transparent'
 			}`}
 		>
 			<div class="flex flex-col items-start justify-between gap-2">
 				{#if editingSessionId === session.id}
 					<div class="flex-1 min-w-0 w-full">
 						<Input
-							class="w-full h-8 px-2 text-sm rounded-md bg-background/60"
+							class="w-full h-10 px-3 text-sm rounded-lg bg-background/60 focus-visible:ring-2 focus-visible:ring-primary"
 							bind:value={renameDraft}
 						/>
-						<div class="mt-1 text-[11px] text-muted-foreground">
+						<div class="mt-1.5 text-[11px] text-muted-foreground">
 							{session.model} • Tokens: {session.totalTokens} • ${session.totalCost}
 						</div>
 					</div>
-					<div class="flex w-full items-center gap-1 text-[10px] text-muted-foreground">
+					<div class="flex w-full items-center gap-2">
 						<Button
 							variant="outline"
 							size="sm"
-							class="px-2 py-1 rounded-md text-foreground"
+							class="px-4 py-2 min-h-[44px] min-w-[44px] rounded-lg text-foreground font-medium transition-all duration-200 hover:bg-muted"
 							type="button"
 							onclick={() => saveRename(session)}
 						>
@@ -68,7 +68,7 @@
 						<Button
 							variant="ghost"
 							size="sm"
-							class="px-2 py-1 rounded-md"
+							class="px-4 py-2 min-h-[44px] min-w-[44px] rounded-lg transition-all duration-200 hover:bg-muted"
 							type="button"
 							onclick={cancelRename}
 						>
@@ -90,7 +90,7 @@
 					>
 						<div class="flex-1 min-w-0 flex items-start gap-2">
 							<span
-								class={`mt-1 inline-flex h-1.5 w-1.5 rounded-full ${
+								class={`mt-1.5 inline-flex h-2 w-2 rounded-full ${
 									selectedSessionId === session.id ? 'bg-primary/70' : 'bg-muted-foreground/50'
 								}`}
 							></span>
@@ -101,11 +101,11 @@
 								</div>
 							</div>
 						</div>
-						<div class="flex shrink-0 flex-col gap-1 text-[10px] text-muted-foreground">
+						<div class="flex shrink-0 flex-col gap-1.5">
 							<Button
 								variant="ghost"
 								size="sm"
-								class="px-2 py-1 rounded-md"
+								class="px-3 py-2 min-h-[44px] min-w-[44px] rounded-lg text-xs font-medium transition-all duration-200 hover:bg-muted hover:text-foreground"
 								type="button"
 								onclick={(event) => {
 									event.stopPropagation();
@@ -117,7 +117,7 @@
 							<Button
 								variant="ghost"
 								size="sm"
-								class="px-2 py-1 rounded-md text-destructive"
+								class="px-3 py-2 min-h-[44px] min-w-[44px] rounded-lg text-xs font-medium text-destructive transition-all duration-200 hover:bg-destructive/10 hover:text-destructive"
 								type="button"
 								onclick={(event) => {
 									event.stopPropagation();
@@ -134,9 +134,9 @@
 	{/each}
 
 	{#if sessions.length === 0}
-		<div class="px-3 py-6 text-xs text-muted-foreground">
-			No conversations yet.
-			<div class="mt-1 text-[11px] text-muted-foreground/60">Start one to see it here.</div>
+		<div class="px-4 py-12 text-center">
+			<p class="text-sm font-medium text-muted-foreground mb-1">No conversations yet</p>
+			<p class="text-xs text-muted-foreground/70">Start one to see it here</p>
 		</div>
 	{/if}
 </div>

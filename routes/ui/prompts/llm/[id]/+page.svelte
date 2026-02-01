@@ -187,27 +187,26 @@
 		});
 </script>
 
-<section class="space-y-6" in:fade={{ duration: 180 }}>
-	<header class="rounded-[28px] border bg-card/80 p-6 shadow-sm" in:fly={{ y: 12, duration: 220 }}>
+<section class="space-y-6 xl:space-y-8" in:fade={{ duration: 180 }}>
+	<header class="rounded-2xl border bg-card/80 p-6 lg:p-8 xl:p-10 shadow-sm" in:fly={{ y: 12, duration: 220 }}>
 		<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 			<div class="space-y-2">
 <input
-					class="w-full border-transparent bg-transparent text-2xl font-semibold tracking-tight outline-none placeholder:text-muted-foreground focus:border-b focus:border-foreground/20 sm:max-w-2xl"
+					class="w-full border-transparent bg-transparent text-2xl lg:text-3xl font-semibold tracking-tight outline-none placeholder:text-muted-foreground border-b-2 border-transparent focus:border-primary transition-colors duration-200 sm:max-w-2xl lg:max-w-3xl"
 					bind:value={llmTitle}
 					placeholder="Untitled LLM.txt"
 				/>
-				<textarea
-					class="w-full resize-none border-transparent bg-transparent text-sm text-muted-foreground outline-none placeholder:text-muted-foreground focus:border-b focus:border-foreground/20 sm:max-w-2xl"
+				<Input
+					class="w-full border-transparent bg-transparent text-sm lg:text-base text-muted-foreground focus-visible:bg-muted/30 px-0 sm:max-w-2xl lg:max-w-3xl"
 					bind:value={llmLabel}
 					placeholder="Add a short description"
-					rows={1}
-				></textarea>
+				/>
 			</div>
 			<div class="flex flex-wrap items-center gap-3 sm:justify-end">
 				<Button
 					variant="outline"
 					size="sm"
-					class="rounded-full px-4 py-2 text-xs font-semibold"
+					class="rounded-full px-4 py-2 min-h-[44px] text-xs font-semibold transition-all duration-200 hover:bg-muted"
 					onclick={() => goto('/ui/MoLOS-AI-Knowledge/prompts')}
 				>
 					Go back
@@ -216,23 +215,23 @@
 		</div>
 	</header>
 
-	<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]" in:fade={{ duration: 180 }}>
-		<div class="space-y-6">
-			<section class="rounded-[28px] border bg-card/80 p-6 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
+	<div class="grid gap-6 lg:gap-8 lg:grid-cols-[minmax(0,1fr)_380px]" in:fade={{ duration: 180 }}>
+		<div class="space-y-6 xl:space-y-8">
+			<section class="rounded-2xl border bg-card/80 p-6 lg:p-8 xl:p-10 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
 				<div class="flex items-center justify-between">
-					<h3 class="text-sm font-semibold">LLM.txt content</h3>
+					<h3 class="text-sm lg:text-base font-semibold">LLM.txt content</h3>
 					<span class="text-xs text-muted-foreground">Main draft</span>
 				</div>
 				<Textarea
-					class="mt-4 min-h-[320px] w-full rounded-md border bg-background p-3 text-sm"
+					class="mt-4 min-h-[320px] w-full rounded-xl border-2 border-muted bg-background p-4 text-sm focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-200"
 					bind:value={llmContent}
 					placeholder="LLM.txt content"
 				/>
 			</section>
 		</div>
 
-		<aside class="space-y-4">
-			<section class="rounded-[28px] border bg-card/80 p-5 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
+		<aside class="space-y-4 xl:space-y-5">
+			<section class="rounded-2xl border bg-card/80 p-5 lg:p-6 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
 				<h3 class="text-sm font-semibold">Version</h3>
 				<div class="mt-4 flex items-center justify-between text-sm">
 					<div class="text-xs text-muted-foreground">Current</div>
@@ -241,7 +240,7 @@
 				<Button
 					variant="outline"
 					size="sm"
-					class="mt-4 w-full rounded-full px-3 py-2 text-xs font-semibold"
+					class="mt-4 w-full rounded-full px-4 py-2 min-h-[44px] text-xs font-semibold transition-all duration-200 hover:bg-muted"
 					onclick={() => {
 						versionsOpen = true;
 					}}
@@ -250,17 +249,17 @@
 				</Button>
 			</section>
 
-			<div class="rounded-[28px] border bg-card/80 p-5 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
+			<div class="rounded-2xl border bg-card/80 p-5 lg:p-6 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
 				<h3 class="text-sm font-semibold">Commit</h3>
 				<div class="mt-4 grid gap-3">
 					<Input
-						class="h-10 w-full rounded-md border bg-background px-3 text-sm"
+						class="h-11 w-full rounded-lg border-2 border-muted bg-background px-4 text-sm focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-200"
 						bind:value={llmCommit}
 						placeholder="Commit message (optional)"
 					/>
 					<Button
 						size="sm"
-						class="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background"
+						class="rounded-full bg-foreground px-4 py-2 min-h-[44px] text-xs font-semibold text-background transition-all duration-200 hover:opacity-90"
 						onclick={saveLlmFile}
 					>
 						{isNew ? 'Create LLM.txt' : 'Save changes'}
@@ -268,13 +267,13 @@
 				</div>
 			</div>
 
-			<section class="rounded-[28px] border bg-card/80 p-5 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
+			<section class="rounded-2xl border bg-card/80 p-5 lg:p-6 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
 				<h3 class="text-sm font-semibold">Actions</h3>
 				<div class="mt-4 flex flex-col gap-2">
 					<Button
 						variant="outline"
 						size="sm"
-						class="rounded-full px-3 py-2 text-xs font-semibold"
+						class="rounded-full px-4 py-2 min-h-[44px] text-xs font-semibold transition-all duration-200 hover:bg-muted"
 						onclick={shareLlmFile}
 						disabled={!fileId}
 					>
@@ -283,7 +282,7 @@
 					<Button
 						variant="outline"
 						size="sm"
-						class="rounded-full px-3 py-2 text-xs font-semibold text-destructive"
+						class="rounded-full px-4 py-2 min-h-[44px] text-xs font-semibold text-destructive transition-all duration-200 hover:bg-destructive/10 hover:text-destructive"
 						onclick={deleteLlmFile}
 						disabled={!fileId}
 					>
@@ -302,13 +301,13 @@
 			<SheetTitle>Versions</SheetTitle>
 			<p class="text-xs text-muted-foreground">{data.versions.length} total</p>
 		</SheetHeader>
-	<div class="flex-1 overflow-auto px-5 py-4">
+	<div class="flex-1 overflow-auto scroll-smooth px-5 py-4">
 		<div class="space-y-3">
 		{#if data.versions.length === 0}
 			<p class="text-xs text-muted-foreground">No versions yet.</p>
 		{:else}
 			{#each data.versions as version}
-				<div class="rounded-xl border bg-background/70 p-3">
+				<div class="rounded-xl border-2 border-border/60 bg-background/70 p-3 transition-colors hover:border-border/80">
 					<div class="flex items-start justify-between gap-2">
 						<div>
 							<div class="text-xs font-semibold">v{version.versionNumber}</div>
@@ -323,7 +322,7 @@
 							<Button
 								variant="outline"
 								size="sm"
-								class="rounded-full px-2 py-1"
+								class="rounded-full px-3 py-1.5 min-h-[36px] transition-all duration-200 hover:bg-muted"
 								onclick={() => viewVersion(version)}
 							>
 								View
@@ -331,7 +330,7 @@
 							<Button
 								variant="outline"
 								size="sm"
-								class="rounded-full px-2 py-1"
+								class="rounded-full px-3 py-1.5 min-h-[36px] transition-all duration-200 hover:bg-muted"
 								onclick={() => restoreVersion(version)}
 							>
 								Restore
@@ -339,7 +338,7 @@
 							<Button
 								variant="outline"
 								size="sm"
-								class="rounded-full px-2 py-1"
+								class="rounded-full px-3 py-1.5 min-h-[36px] text-destructive transition-all duration-200 hover:bg-destructive/10 hover:text-destructive"
 								onclick={() => removeVersion(version)}
 								disabled={deletingVersionId === version.id}
 							>

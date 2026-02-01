@@ -119,7 +119,7 @@
 	};
 </script>
 
-<div class="space-y-8 lg:h-full lg:min-h-[80vh]">
+<div class="space-y-8 lg:h-full lg:min-h-[80vh] xl:space-y-10">
 	{#if pendingDeleteJob}
 		<Button
 			variant="ghost"
@@ -188,9 +188,9 @@
 		}}
 	>
 		<input type="hidden" name="model" value={humanizerModel} />
-		<div class="grid min-h-[80vh] gap-6 lg:h-full lg:grid-cols-[1.6fr_0.7fr]">
-			<section class="flex min-h-[70vh] flex-col rounded-3xl border bg-card p-4 sm:p-6 lg:min-h-0 lg:p-8">
-				<div class="grid flex-1 gap-6 lg:grid-cols-2">
+		<div class="grid min-h-[70vh] gap-6 lg:h-full lg:gap-8 lg:grid-cols-[1.8fr_0.8fr] xl:grid-cols-[2fr_1fr]">
+			<section class="flex min-h-[60vh] flex-col rounded-2xl border bg-card p-4 sm:p-6 lg:min-h-0 lg:p-8 xl:p-10">
+				<div class="grid flex-1 gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-2">
 				<div class="flex min-h-0 flex-1 flex-col gap-3">
 					<div class="flex flex-wrap items-center justify-between gap-3">
 						<div
@@ -202,7 +202,7 @@
 							<Button
 								variant="ghost"
 								size="sm"
-								class="h-8 rounded-full px-3 text-xs font-medium text-foreground hover:text-primary"
+								class="h-9 rounded-full px-3 min-h-[44px] text-xs font-medium text-foreground hover:text-primary transition-all duration-200"
 								type="button"
 								onclick={clearInput}
 							>
@@ -211,7 +211,7 @@
 						</div>
 					</div>
 					<Textarea
-						class="w-full flex-1 rounded-2xl border-0 bg-background p-4 text-sm leading-relaxed"
+						class="w-full flex-1 min-h-[200px] sm:min-h-[300px] rounded-2xl border-2 border-muted bg-background p-4 text-sm leading-relaxed focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-200"
 						bind:value={humanizerInput}
 						name="inputText"
 						placeholder="Paste or type your AI-generated text here..."
@@ -225,7 +225,7 @@
 						<span>Humanized</span>
 						<div class="flex items-center gap-2">
 							<NativeSelect
-								class="h-9 rounded-full border-0 bg-background px-3 text-xs text-foreground"
+								class="h-9 rounded-full border-2 border-muted bg-background px-3 text-xs text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-200"
 								bind:value={humanizerLevel}
 								name="level"
 							>
@@ -236,7 +236,7 @@
 								{/each}
 							</NativeSelect>
 							<NativeSelect
-								class="h-9 rounded-full border-0 bg-background px-3 text-xs text-foreground"
+								class="h-9 rounded-full border-2 border-muted bg-background px-3 text-xs text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-200"
 								bind:value={humanizerTone}
 								name="tone"
 							>
@@ -248,8 +248,8 @@
 							</NativeSelect>
 							<Button
 								variant="outline"
-								size="icon-sm"
-								class="rounded-full border px-2 py-1 text-foreground transition hover:text-primary"
+								size="icon"
+								class="h-10 w-10 min-h-[44px] min-w-[44px] rounded-full border-2 px-2 text-foreground transition hover:text-primary hover:border-primary/50"
 								onclick={copyOutput}
 								type="button"
 								aria-label={didCopy ? 'Copied' : 'Copy output'}
@@ -261,7 +261,7 @@
 					</div>
 					<div class="relative min-h-0 flex-1">
 						<Textarea
-							class="h-full w-full rounded-2xl border-0 bg-background p-4 text-sm leading-relaxed"
+							class="h-full w-full min-h-[200px] sm:min-h-[300px] rounded-2xl border-2 border-muted bg-background p-4 text-sm leading-relaxed focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-200"
 							bind:value={humanizerOutput}
 							placeholder="Your humanized output appears here..."
 						/>
@@ -278,8 +278,8 @@
 			</div>
 
 					<Button
-						size="default"
-						class="mt-6 w-full rounded-2xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg transition disabled:opacity-60 sm:text-base"
+						size="lg"
+						class="mt-6 w-full rounded-2xl bg-primary px-6 py-4 text-sm font-semibold text-primary-foreground shadow-lg transition-all duration-200 hover:bg-primary/90 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
 						type="submit"
 						disabled={!humanizerInput.trim() || isHumanizing}
 					>
@@ -287,7 +287,7 @@
 					</Button>
 					
 			<hr class="my-4 border-dashed"/>
-			<details class="rounded-2xl border bg-muted/10 p-3 text-xs text-muted-foreground">
+			<details class="group rounded-2xl border-2 border-muted bg-muted/5 p-4 text-xs text-muted-foreground transition-all duration-200 hover:border-muted-foreground/30 hover:bg-muted/10">
 						<summary class="cursor-pointer select-none font-semibold text-foreground">
 							Model & settings
 						</summary>
@@ -297,7 +297,7 @@
 									Model
 								</span>
 								<NativeSelect
-									class="h-9 rounded-full border bg-background px-3 text-xs text-foreground"
+									class="h-9 rounded-full border-2 border-muted bg-background px-3 text-xs text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-200"
 									bind:value={selectedModelId}
 								>
 									{#each modelOptions as option}
@@ -312,23 +312,23 @@
 								</span>
 								{#if selectedModelId === 'custom'}
 									<Input
-										class="h-9 rounded-full border bg-background px-3 text-xs text-foreground"
+										class="h-9 rounded-full border-2 border-muted bg-background px-3 text-xs text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-200"
 										placeholder="e.g. gpt-4o-mini"
 										bind:value={customModelId}
 									/>
 								{:else}
-									<div class="h-9 rounded-full border border-dashed bg-muted/30"></div>
+									<div class="h-9 rounded-full border-2 border-dashed border-muted/50 bg-muted/30"></div>
 								{/if}
 							</label>
 							<label class="flex flex-col gap-1 sm:col-span-3">
 								<span class="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 									<span>Max tokens</span>
-									<span class="rounded-full border px-2 py-0.5 text-[10px] text-foreground">
+									<span class="rounded-full border-2 border-border/60 px-2 py-0.5 text-[10px] text-foreground">
 										{maxTokens}
 									</span>
 								</span>
 								<input
-									class="w-full"
+									class="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary hover:accent-primary/80"
 									type="range"
 									min="64"
 									max="8192"
@@ -340,12 +340,12 @@
 							<label class="flex flex-col gap-1">
 								<span class="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 									<span>Temperature</span>
-									<span class="rounded-full border px-2 py-0.5 text-[10px] text-foreground">
+									<span class="rounded-full border-2 border-border/60 px-2 py-0.5 text-[10px] text-foreground">
 										{temperature.toFixed(1)}
 									</span>
 								</span>
 								<input
-									class="w-full"
+									class="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary hover:accent-primary/80"
 									type="range"
 									min="0"
 									max="2"
@@ -357,12 +357,12 @@
 							<label class="flex flex-col gap-1">
 								<span class="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 									<span>Top P</span>
-									<span class="rounded-full border px-2 py-0.5 text-[10px] text-foreground">
+									<span class="rounded-full border-2 border-border/60 px-2 py-0.5 text-[10px] text-foreground">
 										{topP.toFixed(2)}
 									</span>
 								</span>
 								<input
-									class="w-full"
+									class="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary hover:accent-primary/80"
 									type="range"
 									min="0"
 									max="1"
@@ -374,12 +374,12 @@
 							<label class="flex flex-col gap-1">
 								<span class="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 									<span>Frequency penalty</span>
-									<span class="rounded-full border px-2 py-0.5 text-[10px] text-foreground">
+									<span class="rounded-full border-2 border-border/60 px-2 py-0.5 text-[10px] text-foreground">
 										{frequencyPenalty.toFixed(1)}
 									</span>
 								</span>
 								<input
-									class="w-full"
+									class="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary hover:accent-primary/80"
 									type="range"
 									min="0"
 									max="2"
@@ -391,12 +391,12 @@
 							<label class="flex flex-col gap-1 sm:col-span-3">
 								<span class="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 									<span>Presence penalty</span>
-									<span class="rounded-full border px-2 py-0.5 text-[10px] text-foreground">
+									<span class="rounded-full border-2 border-border/60 px-2 py-0.5 text-[10px] text-foreground">
 										{presencePenalty.toFixed(1)}
 									</span>
 								</span>
 								<input
-									class="w-full"
+									class="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary hover:accent-primary/80"
 									type="range"
 									min="0"
 									max="2"
@@ -410,7 +410,7 @@
 									Custom prompt note
 								</span>
 								<Textarea
-									class="min-h-[80px] w-full rounded-2xl border bg-background p-3 text-xs text-foreground"
+									class="min-h-[80px] w-full rounded-xl border-2 border-muted bg-background p-3 text-xs text-foreground focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all duration-200"
 									placeholder="Add any extra instruction for the humanizer prompt (e.g. keep it punchy, avoid jargon)."
 									name="options"
 								/>
@@ -419,12 +419,12 @@
 					</details>
 		</section>
 
-			<aside class="flex h-full flex-col rounded-2xl border bg-card p-6 lg:max-h-[70vh]">
-				<h3 class="text-lg font-semibold">Recent Jobs</h3>
-				<div class="mt-4 flex-1 space-y-3 overflow-y-auto ">
+			<aside class="flex h-full flex-col rounded-2xl border bg-card p-4 sm:p-6 lg:p-8 lg:max-h-[70vh]">
+				<h3 class="text-lg lg:text-xl font-semibold">Recent Jobs</h3>
+				<div class="mt-4 flex-1 space-y-3 overflow-y-auto scroll-smooth">
 				{#each jobs as job}
 					<div
-						class="cursor-pointer rounded-xl border p-3 transition hover:border-border/70 hover:bg-muted/20"
+						class="cursor-pointer rounded-xl border-2 border-border/60 p-3 transition-all duration-200 hover:border-border/70 hover:bg-muted/20"
 						onclick={() => loadJob(job)}
 					>
 						<div class="flex items-start justify-between gap-2">
@@ -433,14 +433,14 @@
 								{job.outputText ?? job.inputText}
 							</div>
 							<div class="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-								<span class="rounded-full border px-2 py-0.5">{job.tone}</span>
-								<span class="rounded-full border px-2 py-0.5">{job.level}</span>
+								<span class="rounded-full border-2 px-2 py-0.5">{job.tone}</span>
+								<span class="rounded-full border-2 px-2 py-0.5">{job.level}</span>
 							</div>
 						</div>
 						<Button
 							variant="outline"
-							size="icon-sm"
-							class="rounded-full border p-2 text-muted-foreground transition hover:text-foreground"
+							size="icon"
+							class="h-9 w-9 min-h-[44px] min-w-[44px] rounded-full border-2 p-2 text-muted-foreground transition hover:text-destructive hover:border-destructive/50 hover:bg-destructive/5"
 							aria-label="Delete job"
 							type="button"
 								onclick={(event) => {
