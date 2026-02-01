@@ -72,45 +72,47 @@
 </script>
 
 <div class="min-h-screen bg-background pb-20">
-	<div class="mx-auto max-w-5xl xl:max-w-6xl space-y-8 p-6 lg:p-8 xl:p-10">
+	<div class="mx-auto max-w-5xl space-y-8 p-6 lg:p-8 xl:max-w-6xl xl:p-10">
 		<div class="space-y-4 pt-4">
 			<Button
 				variant="ghost"
 				size="sm"
 				onclick={() => goto('/ui/MoLOS-AI-Knowledge')}
-				class="text-muted-foreground -ml-2 h-8 lg:h-10 rounded-full px-3 lg:px-4 text-[10px] lg:text-xs font-bold tracking-widest uppercase hover:text-foreground"
+				class="text-muted-foreground -ml-2 h-8 rounded-full px-3 text-[10px] font-bold tracking-widest uppercase hover:text-foreground lg:h-10 lg:px-4 lg:text-xs"
 			>
 				<ArrowLeft class="mr-2 h-3 w-3 lg:h-4 lg:w-4" />
 				Back to AI Knowledge
 			</Button>
 			<div class="space-y-1">
-				<h1 class="text-3xl lg:text-4xl font-black tracking-tighter">AI Provider Settings</h1>
-				<p class="text-muted-foreground text-xs lg:text-sm font-bold tracking-widest uppercase">
+				<h1 class="text-3xl font-black tracking-tighter lg:text-4xl">AI Provider Settings</h1>
+				<p class="text-muted-foreground text-xs font-bold tracking-widest uppercase lg:text-sm">
 					Configure the LLM provider for this module
 				</p>
 			</div>
 		</div>
 
 		<div class="grid gap-6 lg:gap-8">
-			<Card class="border-2 rounded-2xl shadow-sm bg-card/80">
+			<Card class="rounded-2xl border-2 bg-card/80 shadow-sm">
 				<CardHeader class="p-6 lg:p-8">
 					<div class="flex items-center gap-3 lg:gap-4">
-						<div class="rounded-xl bg-primary/10 p-2 lg:p-3 text-primary shadow-xs">
+						<div class="rounded-xl bg-primary/10 p-2 text-primary shadow-xs lg:p-3">
 							<Bot class="h-5 w-5 lg:h-6 lg:w-6" />
 						</div>
 						<div>
 							<CardTitle class="text-lg lg:text-xl">Provider Configuration</CardTitle>
-							<CardDescription class="text-xs lg:text-sm">Select the LLM provider used in the playground.</CardDescription>
+							<CardDescription class="text-xs lg:text-sm"
+								>Select the LLM provider used in the playground.</CardDescription
+							>
 						</div>
 					</div>
 				</CardHeader>
-				<CardContent class="space-y-4 p-6 lg:p-8 pt-0">
+				<CardContent class="space-y-4 p-6 pt-0 lg:p-8">
 					<div class="space-y-2">
 						<Label for="provider">AI Provider</Label>
 						<NativeSelect
 							id="provider"
 							bind:value={provider}
-							class="border-input placeholder:text-muted-foreground focus-visible:ring-ring flex h-11 w-full rounded-lg border-2 border-muted bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50"
+							class="border-input placeholder:text-muted-foreground focus-visible:ring-ring flex h-11 w-full rounded-lg border-2 border-muted bg-background px-3 py-2 text-sm ring-offset-background transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
 						>
 							{#each providers as p (p.value)}
 								<NativeSelectOption value={p.value}>{p.label}</NativeSelectOption>
@@ -127,23 +129,21 @@
 							type="password"
 							bind:value={apiToken}
 							placeholder="Enter provider token"
-							class="h-11 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-200"
+							class="h-11 transition-all duration-200 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
 						/>
 					</div>
 					<div class="space-y-2">
 						<Label>Preconfigured Models</Label>
 						<div class="flex flex-wrap gap-2">
 							{#if preconfiguredModels.length === 0}
-								<div class="text-muted-foreground text-xs">
-									No models configured yet.
-								</div>
+								<div class="text-muted-foreground text-xs">No models configured yet.</div>
 							{:else}
 								{#each preconfiguredModels as model}
 									<Button
 										type="button"
 										variant="outline"
 										size="sm"
-										class="rounded-full px-4 py-2 min-h-[44px] text-xs font-medium transition-all duration-200 hover:bg-destructive hover:text-destructive-foreground hover:border-destructive"
+										class="min-h-[44px] rounded-full px-4 py-2 text-xs font-medium transition-all duration-200 hover:border-destructive hover:bg-destructive hover:text-destructive-foreground"
 										onclick={() => removeModel(model)}
 									>
 										{model} ✕
@@ -155,7 +155,7 @@
 							<Input
 								bind:value={newModel}
 								placeholder="Add model id (e.g. gpt-4o-mini)"
-								class="h-11 focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary transition-all duration-200"
+								class="h-11 transition-all duration-200 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
 								onkeydown={(event) => {
 									if (event.key === 'Enter') {
 										event.preventDefault();
@@ -167,7 +167,7 @@
 								type="button"
 								variant="outline"
 								size="sm"
-								class="rounded-lg px-4 py-2 min-h-[44px] text-sm font-medium transition-all duration-200 hover:bg-muted"
+								class="min-h-[44px] rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 hover:bg-muted"
 								onclick={addModel}
 							>
 								Add model
@@ -185,7 +185,7 @@
 					size="default"
 					onclick={handleSave}
 					disabled={isSaving}
-					class="rounded-xl px-8 py-3 text-sm font-bold shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+					class="rounded-xl px-8 py-3 text-sm font-bold shadow-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					{#if isSaving}
 						Saving...

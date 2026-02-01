@@ -6,11 +6,7 @@ import type {
 	UsageAnalytic
 } from '$lib/models/external_modules/MoLOS-AI-Knowledge';
 
-const safeFetch = async <T>(
-	fetcher: typeof fetch,
-	url: string,
-	fallback: T
-): Promise<T> => {
+const safeFetch = async <T>(fetcher: typeof fetch, url: string, fallback: T): Promise<T> => {
 	try {
 		const res = await fetcher(url);
 		if (!res.ok) return fallback;
@@ -28,26 +24,23 @@ export const load: PageServerLoad = async ({ fetch }) => {
 		safeFetch<UsageAnalytic[]>(fetch, '/api/MoLOS-AI-Knowledge/analytics', [])
 	]);
 
-	const lastPrompt = prompts.reduce((latest, prompt) =>
-		!latest || prompt.updatedAt > latest ? prompt.updatedAt : latest
-	, 0);
-	const lastSession = sessions.reduce((latest, session) =>
-		!latest || session.updatedAt > latest ? session.updatedAt : latest
-	, 0);
-	const lastJob = jobs.reduce((latest, job) =>
-		!latest || job.updatedAt > latest ? job.updatedAt : latest
-	, 0);
+	const lastPrompt = prompts.reduce(
+		(latest, prompt) => (!latest || prompt.updatedAt > latest ? prompt.updatedAt : latest),
+		0
+	);
+	const lastSession = sessions.reduce(
+		(latest, session) => (!latest || session.updatedAt > latest ? session.updatedAt : latest),
+		0
+	);
+	const lastJob = jobs.reduce(
+		(latest, job) => (!latest || job.updatedAt > latest ? job.updatedAt : latest),
+		0
+	);
 	const lastActivity = Math.max(lastPrompt, lastSession, lastJob) || null;
 
-	const recentPrompts = [...prompts]
-		.sort((a, b) => b.updatedAt - a.updatedAt)
-		.slice(0, 5);
-	const recentSessions = [...sessions]
-		.sort((a, b) => b.updatedAt - a.updatedAt)
-		.slice(0, 5);
-	const recentJobs = [...jobs]
-		.sort((a, b) => b.updatedAt - a.updatedAt)
-		.slice(0, 5);
+	const recentPrompts = [...prompts].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 5);
+	const recentSessions = [...sessions].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 5);
+	const recentJobs = [...jobs].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 5);
 
 	return {
 		stats: {

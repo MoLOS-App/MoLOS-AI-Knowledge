@@ -13,11 +13,7 @@ import { AiProviderSettingsRepository } from '$lib/repositories/external_modules
 import { runHumanizerPipeline } from '$lib/utils/external_modules/MoLOS-AI-Knowledge/humanizer';
 import { db } from '$lib/server/db';
 
-const safeFetch = async <T>(
-	fetcher: typeof fetch,
-	url: string,
-	fallback: T
-): Promise<T> => {
+const safeFetch = async <T>(fetcher: typeof fetch, url: string, fallback: T): Promise<T> => {
 	try {
 		const res = await fetcher(url);
 		if (!res.ok) return fallback;

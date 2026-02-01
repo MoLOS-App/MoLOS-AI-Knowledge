@@ -1,11 +1,7 @@
 import type { PageServerLoad } from './$types';
 import type { PromptChain } from '$lib/models/external_modules/MoLOS-AI-Knowledge';
 
-const safeFetch = async <T>(
-	fetcher: typeof fetch,
-	url: string,
-	fallback: T
-): Promise<T> => {
+const safeFetch = async <T>(fetcher: typeof fetch, url: string, fallback: T): Promise<T> => {
 	try {
 		const res = await fetcher(url);
 		if (!res.ok) return fallback;

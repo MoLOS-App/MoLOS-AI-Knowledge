@@ -1,6 +1,6 @@
-id: "MoLOS-AI-Knowledge"
-name: "MoLOS AI Knowledge"
-version: "0.1.0"
-description: "AI prompt management, playground, humanizer, and LLM.txt storage"
-author: "Senior Technical Product Owner"
-icon: "Sparkles"
+id: 'MoLOS-AI-Knowledge'
+name: 'MoLOS AI Knowledge'
+version: '0.1.0'
+description: 'AI prompt management, playground, humanizer, and LLM.txt storage'
+author: 'Senior Technical Product Owner'
+icon: 'Sparkles'

@@ -1,26 +1,22 @@
-import type { PageServerLoad } from "./$types";
-import type { AiProviderSettings } from "$lib/models/external_modules/MoLOS-AI-Knowledge";
+import type { PageServerLoad } from './$types';
+import type { AiProviderSettings } from '$lib/models/external_modules/MoLOS-AI-Knowledge';
 
-const safeFetch = async <T>(
-  fetcher: typeof fetch,
-  url: string,
-  fallback: T,
-): Promise<T> => {
-  try {
-    const res = await fetcher(url);
-    if (!res.ok) return fallback;
-    return (await res.json()) as T;
-  } catch {
-    return fallback;
-  }
+const safeFetch = async <T>(fetcher: typeof fetch, url: string, fallback: T): Promise<T> => {
+	try {
+		const res = await fetcher(url);
+		if (!res.ok) return fallback;
+		return (await res.json()) as T;
+	} catch {
+		return fallback;
+	}
 };
 
 export const load: PageServerLoad = async ({ fetch }) => {
-  const settings = await safeFetch<AiProviderSettings | null>(
-    fetch,
-    "/api/MoLOS-AI-Knowledge/settings",
-    null,
-  );
+	const settings = await safeFetch<AiProviderSettings | null>(
+		fetch,
+		'/api/MoLOS-AI-Knowledge/settings',
+		null
+	);
 
-  return { settings };
+	return { settings };
 };

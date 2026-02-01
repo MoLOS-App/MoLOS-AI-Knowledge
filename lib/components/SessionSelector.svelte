@@ -16,18 +16,18 @@
 	export let requestDeleteSession: (session: PlaygroundSession) => void;
 </script>
 
-<div class="flex flex-col flex-1 gap-2 px-4 py-4 pr-3 overflow-y-auto">
+<div class="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-4 pr-3">
 	<div
 		class={`rounded-xl px-3 py-2 text-left text-sm transition ${
 			!selectedSessionId
 				? 'bg-muted/40 text-foreground'
-				: 'text-muted-foreground hover:text-foreground hover:bg-muted/20'
+				: 'text-muted-foreground hover:bg-muted/20 hover:text-foreground'
 		}`}
 	>
 		<Button
 			variant="ghost"
 			size="sm"
-			class="w-full justify-start text-left gap-2"
+			class="w-full justify-start gap-2 text-left"
 			type="button"
 			onclick={startNewConversation}
 		>
@@ -41,25 +41,25 @@
 			class={`rounded-xl px-3 py-2 transition ${
 				selectedSessionId === session.id
 					? 'bg-muted/40 text-foreground'
-					: 'text-muted-foreground hover:text-foreground hover:bg-muted/20'
+					: 'text-muted-foreground hover:bg-muted/20 hover:text-foreground'
 			}`}
 		>
 			<div class="flex flex-col items-start justify-between gap-2">
 				{#if editingSessionId === session.id}
-					<div class="flex-1 min-w-0 w-full">
+					<div class="w-full min-w-0 flex-1">
 						<Input
-							class="w-full h-8 px-2 text-sm rounded-md bg-background/60"
+							class="h-8 w-full rounded-md bg-background/60 px-2 text-sm"
 							bind:value={renameDraft}
 						/>
-						<div class="mt-1 text-[11px] text-muted-foreground">
+						<div class="text-muted-foreground mt-1 text-[11px]">
 							{session.model} • Tokens: {session.totalTokens} • ${session.totalCost}
 						</div>
 					</div>
-					<div class="flex w-full items-center gap-1 text-[10px] text-muted-foreground">
+					<div class="text-muted-foreground flex w-full items-center gap-1 text-[10px]">
 						<Button
 							variant="outline"
 							size="sm"
-							class="px-2 py-1 rounded-md text-foreground"
+							class="rounded-md px-2 py-1 text-foreground"
 							type="button"
 							onclick={() => saveRename(session)}
 						>
@@ -68,7 +68,7 @@
 						<Button
 							variant="ghost"
 							size="sm"
-							class="px-2 py-1 rounded-md"
+							class="rounded-md px-2 py-1"
 							type="button"
 							onclick={cancelRename}
 						>
@@ -80,7 +80,7 @@
 						<Button
 							variant="ghost"
 							size="sm"
-							class="flex-1 min-w-0 justify-start text-left gap-2"
+							class="min-w-0 flex-1 justify-start gap-2 text-left"
 							type="button"
 							onclick={() => selectSession(session)}
 						>
@@ -90,17 +90,17 @@
 								}`}
 							></span>
 							<div class="min-w-0">
-								<div class="text-xs font-semibold truncate">{sessionTitle(session)}</div>
-								<div class="mt-0.5 text-[11px] text-muted-foreground">
+								<div class="truncate text-xs font-semibold">{sessionTitle(session)}</div>
+								<div class="text-muted-foreground mt-0.5 text-[11px]">
 									{session.model} • Tokens: {session.totalTokens} • ${session.totalCost}
 								</div>
 							</div>
 						</Button>
-						<div class="flex shrink-0 flex-col gap-1 text-[10px] text-muted-foreground">
+						<div class="text-muted-foreground flex shrink-0 flex-col gap-1 text-[10px]">
 							<Button
 								variant="ghost"
 								size="sm"
-								class="px-2 py-1 rounded-md"
+								class="rounded-md px-2 py-1"
 								type="button"
 								onclick={() => beginRename(session)}
 							>
@@ -109,7 +109,7 @@
 							<Button
 								variant="ghost"
 								size="sm"
-								class="px-2 py-1 rounded-md text-destructive"
+								class="rounded-md px-2 py-1 text-destructive"
 								type="button"
 								onclick={() => requestDeleteSession(session)}
 							>
@@ -123,9 +123,9 @@
 	{/each}
 
 	{#if sessions.length === 0}
-		<div class="px-3 py-6 text-xs text-muted-foreground">
+		<div class="text-muted-foreground px-3 py-6 text-xs">
 			No conversations yet.
-			<div class="mt-1 text-[11px] text-muted-foreground/60">Start one to see it here.</div>
+			<div class="text-muted-foreground/60 mt-1 text-[11px]">Start one to see it here.</div>
 		</div>
 	{/if}
 </div>

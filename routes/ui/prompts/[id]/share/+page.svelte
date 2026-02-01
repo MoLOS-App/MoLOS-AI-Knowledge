@@ -34,9 +34,7 @@
 			<div class="flex flex-wrap items-center justify-between gap-3">
 				<div>
 					<h2 class="text-2xl font-semibold tracking-tight">Share prompt</h2>
-					<p class="text-sm text-muted-foreground">
-						Copy a share link for this prompt.
-					</p>
+					<p class="text-muted-foreground text-sm">Copy a share link for this prompt.</p>
 				</div>
 				<Button
 					variant="outline"
@@ -55,26 +53,22 @@
 							<div class="text-sm font-semibold">{prompt.title}</div>
 						</div>
 						<div class="flex items-center gap-2 text-xs">
-							<Button
-								variant="outline"
-								size="sm"
-								class="rounded-full px-3 py-1"
-								onclick={copyLink}
-							>
+							<Button variant="outline" size="sm" class="rounded-full px-3 py-1" onclick={copyLink}>
 								{copied ? 'Copied' : 'Copy link'}
 							</Button>
 						</div>
 					</div>
 					{#if prompt.description}
-						<p class="mt-3 text-xs text-muted-foreground">{prompt.description}</p>
+						<p class="text-muted-foreground mt-3 text-xs">{prompt.description}</p>
 					{/if}
-					<pre class="mt-4 whitespace-pre-wrap rounded-xl bg-muted/40 p-4 text-xs text-foreground">
-{prompt.content}</pre
-					>
+					<pre class="mt-4 rounded-xl bg-muted/40 p-4 text-xs whitespace-pre-wrap text-foreground">
+{prompt.content}</pre>
 					{#if prompt.tags.length}
 						<div class="mt-4 flex flex-wrap gap-2">
 							{#each prompt.tags as tag}
-								<span class="rounded-full bg-background/70 px-2.5 py-1 text-[10px] font-semibold uppercase">
+								<span
+									class="rounded-full bg-background/70 px-2.5 py-1 text-[10px] font-semibold uppercase"
+								>
 									{tag}
 								</span>
 							{/each}
@@ -82,7 +76,7 @@
 					{/if}
 				</div>
 			{:else}
-				<div class="rounded-2xl border border-dashed p-6 text-sm text-muted-foreground">
+				<div class="text-muted-foreground rounded-2xl border border-dashed p-6 text-sm">
 					This prompt is not available. Make sure you are signed in or the link is valid.
 				</div>
 			{/if}
