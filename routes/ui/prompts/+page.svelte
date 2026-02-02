@@ -1,3 +1,8 @@
+<svelte:head>
+	<title>Knowledge Prompts - MoLOS AI Knowledge</title>
+	<meta name="description" content="Curate prompts and LLM.txt files in one workspace." />
+</svelte:head>
+
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import { flip } from 'svelte/animate';

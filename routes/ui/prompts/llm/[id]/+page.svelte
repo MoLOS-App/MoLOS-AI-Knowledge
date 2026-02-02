@@ -1,3 +1,8 @@
+<svelte:head>
+	<title>Edit LLM.txt - MoLOS AI Knowledge</title>
+	<meta name="description" content="Edit and manage LLM.txt files with version control." />
+</svelte:head>
+
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import {

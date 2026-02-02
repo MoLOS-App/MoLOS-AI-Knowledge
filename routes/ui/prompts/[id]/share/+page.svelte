@@ -1,3 +1,8 @@
+<svelte:head>
+	<title>Share Prompt - MoLOS AI Knowledge</title>
+	<meta name="description" content="Get a shareable link for your prompt." />
+</svelte:head>
+
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';

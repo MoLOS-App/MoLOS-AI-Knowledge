@@ -1,3 +1,8 @@
+<svelte:head>
+	<title>MoLOS AI Knowledge - Home</title>
+	<meta name="description" content="Monitor prompt libraries, playground experiments, and humanizer output quality." />
+</svelte:head>
+
 <script lang="ts">
 	export let data;
 

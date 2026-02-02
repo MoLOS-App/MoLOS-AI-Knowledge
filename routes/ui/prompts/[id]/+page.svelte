@@ -1,3 +1,8 @@
+<svelte:head>
+	<title>Edit Prompt - MoLOS AI Knowledge</title>
+	<meta name="description" content="Edit and manage your AI prompts with version control." />
+</svelte:head>
+
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import {

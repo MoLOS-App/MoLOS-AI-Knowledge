@@ -1,3 +1,8 @@
+<svelte:head>
+	<title>AI Knowledge Settings - MoLOS</title>
+	<meta name="description" content="Configure the LLM provider for AI Knowledge module." />
+</svelte:head>
+
 <script lang="ts">
 	import {
 		Card,

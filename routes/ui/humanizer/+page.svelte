@@ -1,3 +1,8 @@
+<svelte:head>
+	<title>Humanizer - MoLOS AI Knowledge</title>
+	<meta name="description" content="Transform AI-generated text into more natural language." />
+</svelte:head>
+
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';

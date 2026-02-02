@@ -1,3 +1,8 @@
+<svelte:head>
+	<title>AI Playground - MoLOS AI Knowledge</title>
+	<meta name="description" content="Test and experiment with AI prompts and models." />
+</svelte:head>
+
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import { Send, Plus, Menu, SlidersHorizontal } from 'lucide-svelte';

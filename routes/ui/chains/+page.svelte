@@ -1,3 +1,8 @@
+<svelte:head>
+	<title>Prompt Chains - MoLOS AI Knowledge</title>
+	<meta name="description" content="Coming soon: Chain prompts together for complex workflows." />
+</svelte:head>
+
 <div class="flex min-h-[60vh] items-center justify-center px-4 py-12">
 	<section class="w-full max-w-3xl rounded-2xl border border-dashed bg-card p-8 text-center">
 		<p class="text-xs font-semibold tracking-[0.3em] text-rose-500 uppercase">Under development</p>
