@@ -3,7 +3,6 @@ import {
 	prompts,
 	promptVersions
 } from '$lib/server/db/schema/external_modules/MoLOS-AI-Knowledge/tables';
-import type { Prompt } from '$lib/models/external_modules/MoLOS-AI-Knowledge';
 import type {
 	CreatePromptInput,
 	Prompt,

@@ -43,14 +43,14 @@ export const load: PageServerLoad = async ({ fetch }) => {
 	};
 };
 
-const optionalNumber = (schema: z.ZodNumber | z.ZodEffectsAny) =>
+const optionalNumber = (schema: z.ZodNumber | any) =>
 	z.preprocess(
 		(value) => {
 			if (value === '' || value === null || value === undefined) return undefined;
 			return value;
 		},
 		'_def' in schema && schema._def.typeName === 'ZodEffects'
-			? (schema as z.ZodEffectsAny)._def.schema.optional()
+			? (schema as any)._def.schema.optional()
 			: schema.optional()
 	);
 

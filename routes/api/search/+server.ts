@@ -1,11 +1,11 @@
-import { json, error } from "@sveltejs/kit";
-import type { RequestHandler } from "./$types";
-import { z } from "zod";
-import { PromptRepository } from "$lib/repositories/external_modules/MoLOS-AI-Knowledge/prompt-repository";
-import { PromptChainRepository } from "$lib/repositories/external_modules/MoLOS-AI-Knowledge/prompt-chain-repository";
-import { LlmFileRepository } from "$lib/repositories/external_modules/MoLOS-AI-Knowledge/llm-file-repository";
-import { AbTestRepository } from "$lib/repositories/external_modules/MoLOS-AI-Knowledge/ab-test-repository";
-import { db } from "$lib/server/db";
+import { json, error } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+import { z } from 'zod';
+import { PromptRepository } from '$lib/repositories/external_modules/MoLOS-AI-Knowledge/prompt-repository';
+import { PromptChainRepository } from '$lib/repositories/external_modules/MoLOS-AI-Knowledge/prompt-chain-repository';
+import { LlmFileRepository } from '$lib/repositories/external_modules/MoLOS-AI-Knowledge/llm-file-repository';
+import { AbTestRepository } from '$lib/repositories/external_modules/MoLOS-AI-Knowledge/ab-test-repository';
+import { db } from '$lib/server/db';
 
 type SearchResult = {
 	moduleId: string;
@@ -20,11 +20,11 @@ type SearchResult = {
 
 const SearchSchema = z.object({
 	q: z.string().min(1),
-	limit: z.coerce.number().int().min(1).max(100).optional(),
+	limit: z.coerce.number().int().min(1).max(100).optional()
 });
 
-const moduleId = "MoLOS-AI-Knowledge";
-const moduleName = "AI Knowledge";
+const moduleId = 'MoLOS-AI-Knowledge';
+const moduleName = 'AI Knowledge';
 
 const buildSnippet = (value?: string | null) => {
 	if (!value) return undefined;
@@ -37,15 +37,15 @@ const toMs = (value?: number | null) => (value ? value * 1000 : undefined);
 
 export const GET: RequestHandler = async ({ locals, url }) => {
 	const userId = locals.user?.id;
-	if (!userId) throw error(401, "Unauthorized");
+	if (!userId) throw error(401, 'Unauthorized');
 
 	const parsed = SearchSchema.safeParse({
-		q: url.searchParams.get("q"),
-		limit: url.searchParams.get("limit") ?? undefined,
+		q: url.searchParams.get('q'),
+		limit: url.searchParams.get('limit') ?? undefined
 	});
 
 	if (!parsed.success) {
-		throw error(400, parsed.error.issues[0]?.message ?? "Invalid query");
+		throw error(400, parsed.error.issues[0]?.message ?? 'Invalid query');
 	}
 
 	const { q, limit } = parsed.data;
@@ -60,48 +60,48 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		promptRepo.searchByUserId(userId, q, perTypeLimit),
 		promptChainRepo.searchByUserId(userId, q, perTypeLimit),
 		llmFileRepo.searchByUserId(userId, q, perTypeLimit),
-		abTestRepo.searchByUserId(userId, q, perTypeLimit),
+		abTestRepo.searchByUserId(userId, q, perTypeLimit)
 	]);
 
 	const results: SearchResult[] = [
 		...prompts.map((prompt) => ({
 			moduleId,
 			moduleName,
-			entityType: "prompt",
+			entityType: 'prompt',
 			entityId: prompt.id,
 			title: prompt.title,
 			snippet: buildSnippet(prompt.description || prompt.content),
 			href: `/ui/MoLOS-AI-Knowledge/prompts`,
-			updatedAt: toMs(prompt.updatedAt),
+			updatedAt: toMs(prompt.updatedAt)
 		})),
 		...promptChains.map((chain) => ({
 			moduleId,
 			moduleName,
-			entityType: "prompt_chain",
+			entityType: 'prompt_chain',
 			entityId: chain.id,
 			title: chain.name,
 			snippet: buildSnippet(chain.description),
 			href: `/ui/MoLOS-AI-Knowledge/chains`,
-			updatedAt: toMs(chain.updatedAt),
+			updatedAt: toMs(chain.updatedAt)
 		})),
 		...llmFiles.map((file) => ({
 			moduleId,
 			moduleName,
-			entityType: "llm_file",
+			entityType: 'llm_file',
 			entityId: file.id,
 			title: file.title,
 			href: `/ui/MoLOS-AI-Knowledge/prompts/llm`,
-			updatedAt: toMs(file.updatedAt),
+			updatedAt: toMs(file.updatedAt)
 		})),
 		...abTests.map((test) => ({
 			moduleId,
 			moduleName,
-			entityType: "ab_test",
+			entityType: 'ab_test',
 			entityId: test.id,
 			title: test.name,
 			href: `/ui/MoLOS-AI-Knowledge/ab-tests`,
-			updatedAt: toMs(test.updatedAt),
-		})),
+			updatedAt: toMs(test.updatedAt)
+		}))
 	];
 
 	return json({ query: q, results, total: results.length });

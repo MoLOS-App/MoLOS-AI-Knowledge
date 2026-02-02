@@ -40,11 +40,7 @@ export class LlmFileRepository extends BaseRepository {
 			.select()
 			.from(llmFiles)
 			.where(
-				and(
-					eq(llmFiles.userId, userId),
-					eq(llmFiles.isDeleted, false),
-					like(llmFiles.title, term)
-				)
+				and(eq(llmFiles.userId, userId), eq(llmFiles.isDeleted, false), like(llmFiles.title, term))
 			)
 			.limit(limit)
 			.orderBy(desc(llmFiles.updatedAt));
