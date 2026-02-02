@@ -1,8 +1,3 @@
-<svelte:head>
-	<title>Knowledge Prompts - MoLOS AI Knowledge</title>
-	<meta name="description" content="Curate prompts and LLM.txt files in one workspace." />
-</svelte:head>
-
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import { flip } from 'svelte/animate';
@@ -92,6 +87,11 @@
 		goto(`/ui/MoLOS-AI-Knowledge/prompts/${promptId}/share`);
 	};
 </script>
+
+<svelte:head>
+	<title>Knowledge Prompts - MoLOS AI Knowledge</title>
+	<meta name="description" content="Curate prompts and LLM.txt files in one workspace." />
+</svelte:head>
 
 <div class="space-y-6 xl:space-y-8" in:fade={{ duration: 180 }}>
 	<section

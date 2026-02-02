@@ -1,8 +1,3 @@
-<svelte:head>
-	<title>AI Playground - MoLOS AI Knowledge</title>
-	<meta name="description" content="Test and experiment with AI prompts and models." />
-</svelte:head>
-
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
 	import { Send, Plus, Menu, SlidersHorizontal } from 'lucide-svelte';
@@ -414,6 +409,11 @@
 		return prompts.find((prompt) => prompt.id === promptId)?.title ?? 'Unknown prompt';
 	};
 </script>
+
+<svelte:head>
+	<title>AI Playground - MoLOS AI Knowledge</title>
+	<meta name="description" content="Test and experiment with AI prompts and models." />
+</svelte:head>
 
 <div
 	class="grid h-[100svh] w-full grid-rows-[auto_minmax(0,1fr)_auto] gap-0 lg:h-full lg:grid-cols-[300px_minmax(0,1fr)_480px] lg:grid-rows-1 lg:rounded-2xl lg:border xl:grid-cols-[320px_minmax(0,1fr)_520px]"

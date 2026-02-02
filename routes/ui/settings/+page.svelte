@@ -1,8 +1,3 @@
-<svelte:head>
-	<title>AI Knowledge Settings - MoLOS</title>
-	<meta name="description" content="Configure the LLM provider for AI Knowledge module." />
-</svelte:head>
-
 <script lang="ts">
 	import {
 		Card,
@@ -75,6 +70,11 @@
 		}
 	}
 </script>
+
+<svelte:head>
+	<title>AI Knowledge Settings - MoLOS</title>
+	<meta name="description" content="Configure the LLM provider for AI Knowledge module." />
+</svelte:head>
 
 <div class="min-h-screen bg-background pb-20">
 	<div class="mx-auto max-w-5xl space-y-8 p-6 lg:p-8 xl:max-w-6xl xl:p-10">

@@ -1,8 +1,3 @@
-<svelte:head>
-	<title>Humanizer - MoLOS AI Knowledge</title>
-	<meta name="description" content="Transform AI-generated text into more natural language." />
-</svelte:head>
-
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
@@ -122,6 +117,11 @@
 		humanizerScore = job.confidenceScore;
 	};
 </script>
+
+<svelte:head>
+	<title>Humanizer - MoLOS AI Knowledge</title>
+	<meta name="description" content="Transform AI-generated text into more natural language." />
+</svelte:head>
 
 <div class="space-y-8 lg:h-full lg:min-h-[80vh] xl:space-y-10">
 	{#if pendingDeleteJob}

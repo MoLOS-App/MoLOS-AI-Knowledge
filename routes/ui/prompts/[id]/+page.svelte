@@ -1,8 +1,3 @@
-<svelte:head>
-	<title>Edit Prompt - MoLOS AI Knowledge</title>
-	<meta name="description" content="Edit and manage your AI prompts with version control." />
-</svelte:head>
-
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import {
@@ -179,6 +174,11 @@
 			year: 'numeric'
 		});
 </script>
+
+<svelte:head>
+	<title>Edit Prompt - MoLOS AI Knowledge</title>
+	<meta name="description" content="Edit and manage your AI prompts with version control." />
+</svelte:head>
 
 <section class="space-y-6 xl:space-y-8" in:fade={{ duration: 180 }}>
 	<header

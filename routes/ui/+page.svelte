@@ -1,8 +1,3 @@
-<svelte:head>
-	<title>MoLOS AI Knowledge - Home</title>
-	<meta name="description" content="Monitor prompt libraries, playground experiments, and humanizer output quality." />
-</svelte:head>
-
 <script lang="ts">
 	export let data;
 
@@ -47,6 +42,14 @@
 
 	const latestModel = recent.sessions[0]?.model ?? null;
 </script>
+
+<svelte:head>
+	<title>MoLOS AI Knowledge - Home</title>
+	<meta
+		name="description"
+		content="Monitor prompt libraries, playground experiments, and humanizer output quality."
+	/>
+</svelte:head>
 
 <div class="space-y-8 xl:space-y-10">
 	<section class="rounded-2xl border bg-card/80 p-6 shadow-sm lg:p-8 xl:p-10">
