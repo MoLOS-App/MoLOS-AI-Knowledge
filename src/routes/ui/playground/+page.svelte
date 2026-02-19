@@ -113,7 +113,7 @@
 	$: visibleSessions = sessions;
 
 	$: selectedSession = selectedSessionId
-		? visibleSessions.find((session) => session.id === selectedSessionId) ?? null
+		? (visibleSessions.find((session) => session.id === selectedSessionId) ?? null)
 		: null;
 
 	$: requiresPrompt = prompts.length > 0;
@@ -148,8 +148,9 @@
 		tick().then(scrollMessagesToBottom);
 	}
 
-	const updateCostEstimate = (text = playgroundMessage) => {
-		const tokens = estimateTokens(text);
+	const updateCostEstimate = (text?: string | Event) => {
+		const textValue = typeof text === 'string' ? text : playgroundMessage;
+		const tokens = estimateTokens(textValue);
 		playgroundTokenEstimate = tokens;
 		const rate = pricing[playgroundModel] ?? pricing['gpt-4'];
 		const inputCost = (tokens / 1000) * rate.input;
@@ -329,9 +330,7 @@
 			pendingDeleteSession = null;
 			toast.success('Conversation deleted.');
 		} catch (err) {
-			toast.error(
-				err instanceof Error ? err.message : 'Failed to delete conversation. Try again.'
-			);
+			toast.error(err instanceof Error ? err.message : 'Failed to delete conversation. Try again.');
 		}
 	};
 
@@ -360,9 +359,7 @@
 					? parsedSettings.temperature
 					: playgroundTemp;
 			playgroundTokens =
-				typeof parsedSettings.maxTokens === 'number'
-					? parsedSettings.maxTokens
-					: playgroundTokens;
+				typeof parsedSettings.maxTokens === 'number' ? parsedSettings.maxTokens : playgroundTokens;
 			playgroundTopP =
 				typeof parsedSettings.topP === 'number' ? parsedSettings.topP : playgroundTopP;
 			playgroundFrequency =
@@ -376,8 +373,7 @@
 		} catch {
 			// Ignore invalid settings payloads
 		}
-		const storedModelId =
-			typeof parsedSettings.modelId === 'string' ? parsedSettings.modelId : '';
+		const storedModelId = typeof parsedSettings.modelId === 'string' ? parsedSettings.modelId : '';
 		const storedCustomModelId =
 			typeof parsedSettings.customModelId === 'string' ? parsedSettings.customModelId : '';
 		if (storedModelId) {
@@ -414,8 +410,13 @@
 	};
 </script>
 
+<svelte:head>
+	<title>AI Playground - MoLOS AI Knowledge</title>
+	<meta name="description" content="Test and experiment with AI prompts and models." />
+</svelte:head>
+
 <div
-	class="grid h-[100svh] w-full grid-rows-[auto_minmax(0,1fr)_auto] gap-0 lg:h-full lg:grid-cols-[260px_minmax(0,1fr)_420px] lg:grid-rows-1 lg:rounded-2xl lg:border"
+	class="grid h-[100svh] w-full grid-rows-[auto_minmax(0,1fr)_auto] gap-0 lg:h-full lg:grid-cols-[300px_minmax(0,1fr)_480px] lg:grid-rows-1 lg:rounded-2xl lg:border xl:grid-cols-[320px_minmax(0,1fr)_520px]"
 >
 	{#if pendingDeleteSession}
 		<Button
@@ -426,16 +427,14 @@
 			onclick={cancelDeleteSession}
 		></Button>
 		<div
-			class="fixed left-1/2 top-1/2 z-50 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border/60 bg-card p-5 shadow-xl"
+			class="fixed top-1/2 left-1/2 z-50 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border/60 bg-card p-5 shadow-xl"
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="delete-session-title"
 			aria-describedby="delete-session-description"
 		>
-			<h3 id="delete-session-title" class="text-base font-semibold">
-				Delete conversation?
-			</h3>
-			<p id="delete-session-description" class="mt-2 text-sm text-muted-foreground">
+			<h3 id="delete-session-title" class="text-base font-semibold">Delete conversation?</h3>
+			<p id="delete-session-description" class="text-muted-foreground mt-2 text-sm">
 				This will remove "{sessionTitle(pendingDeleteSession)}" from your list.
 			</p>
 			<div class="mt-4 flex justify-end gap-2">
@@ -474,22 +473,22 @@
 	{/if}
 
 	<aside
-		class="fixed inset-y-0 left-0 z-40 flex w-80 flex-col border-r border-border/60 bg-card shadow-lg transition-transform duration-300 ease-out lg:static lg:z-0 lg:w-auto lg:translate-x-0 lg:rounded-l-2xl lg:rounded-r-none lg:rounded-t-2xl lg:shadow-none lg:border-r-0 {isSessionsOpen
+		class="fixed inset-y-0 left-0 z-40 flex w-80 flex-col border-r border-border/60 bg-card shadow-lg transition-transform duration-300 ease-out lg:static lg:z-0 lg:w-auto lg:flex-shrink-0 lg:translate-x-0 lg:rounded-t-2xl lg:rounded-l-2xl lg:rounded-r-none lg:border-r-0 lg:shadow-none {isSessionsOpen
 			? 'translate-x-0'
 			: '-translate-x-full lg:translate-x-0'}"
 	>
-		<div
-			class="sticky top-0 z-10 flex items-center justify-between px-4 py-3"
-		>
-			<h2 class="text-xs font-bold tracking-wider uppercase text-muted-foreground">Conversations</h2>
+		<div class="sticky top-0 z-10 flex items-center justify-between px-4 py-3 lg:px-5 lg:py-4">
+			<h2 class="text-muted-foreground text-xs font-bold tracking-wider uppercase lg:text-sm">
+				Conversations
+			</h2>
 			<Button
 				variant="outline"
-				size="icon-sm"
-				class="p-1 text-sm transition rounded-xl border-border/60 bg-background/80 text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+				size="icon"
+				class="text-muted-foreground h-10 w-10 rounded-xl border-border/60 bg-background/80 p-2 text-sm transition hover:bg-muted/30 hover:text-foreground"
 				type="button"
 				onclick={startNewConversation}
 			>
-				<Plus/>
+				<Plus class="h-4 w-4" />
 			</Button>
 		</div>
 		<SessionSelector
@@ -507,7 +506,7 @@
 		/>
 	</aside>
 
-	<div class="flex min-h-0 flex-col rounded-none bg-card h-[90vh]">
+	<div class="flex h-[calc(100dvh-8rem)] min-h-0 flex-col rounded-none bg-card lg:h-full">
 		<div
 			class="sticky top-0 z-20 flex items-center justify-between border-b border-border/60 bg-background/90 px-4 py-3 lg:hidden"
 		>
@@ -515,7 +514,7 @@
 				<Button
 					variant="outline"
 					size="icon"
-					class="flex h-9 w-9 items-center justify-center rounded-full border-border/60 bg-background text-foreground transition hover:bg-muted"
+					class="flex h-10 w-10 items-center justify-center rounded-full border-border/60 bg-background text-foreground transition hover:bg-muted"
 					type="button"
 					aria-label="Toggle conversations"
 					aria-expanded={isSessionsOpen}
@@ -531,7 +530,7 @@
 			<Button
 				variant="outline"
 				size="icon"
-				class="flex h-9 w-9 items-center justify-center rounded-full border-border/60 bg-background text-foreground transition hover:bg-muted"
+				class="flex h-10 w-10 items-center justify-center rounded-full border-border/60 bg-background text-foreground transition hover:bg-muted"
 				type="button"
 				aria-label="Toggle settings"
 				aria-expanded={isSettingsOpen}
@@ -546,28 +545,32 @@
 
 		<div
 			bind:this={messagesContainer}
-			class="flex-1 min-h-0 space-y-4 overflow-y-auto bg-background/90 px-4 py-4 pr-3 sm:px-6 sm:py-6 sm:pr-4 lg:border lg:border-t-0 lg:border-b-0 lg:border-border/60"
+			class="min-h-0 flex-1 space-y-4 overflow-y-auto scroll-smooth bg-background/90 px-4 py-4 pr-3 sm:px-6 sm:py-6 sm:pr-4 lg:border lg:border-t-0 lg:border-b-0 lg:border-border/60 lg:px-8 lg:py-6 lg:pr-6 xl:px-10 xl:py-8"
 		>
 			{#if playgroundMessages.length === 0}
 				<div
-					class="p-6 text-sm border-dashed rounded-2xl border-border/50 bg-muted/20 text-muted-foreground"
+					class="text-muted-foreground rounded-2xl border-2 border-dashed border-border/50 bg-muted/20 p-6 text-center text-sm lg:p-8 lg:text-base xl:p-10"
 				>
 					No messages yet. Start chatting below.
 				</div>
 			{:else}
 				{#each playgroundMessages as message, index (index)}
-					<div class="p-4 text-sm rounded-2xl border-border/60 bg-background">
-						<div class="text-xs uppercase text-muted-foreground">{message.role}</div>
-						<div class="mt-1">{message.content}</div>
-					</div>
+					<article
+						class="rounded-2xl border border-border/60 bg-background p-4 text-sm transition-colors duration-150 hover:border-border"
+					>
+						<div class="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
+							{message.role}
+						</div>
+						<div class="prose prose-sm max-w-none">{message.content}</div>
+					</article>
 				{/each}
 			{/if}
 		</div>
 
-		<div class="px-4 py-4 sm:px-6 lg:border-t lg:border-border/60">
+		<div class="px-4 py-4 sm:px-6 lg:border-t lg:border-border/60 lg:px-8 lg:py-5 xl:px-10 xl:py-6">
 			<div class="relative left-0 w-full">
 				<Textarea
-					class="min-h-[120px] w-full rounded-2xl bg-background p-3 pb-12 text-sm sm:min-h-[140px]"
+					class="min-h-[120px] w-full rounded-2xl border-2 border-muted bg-background p-4 pb-14 text-sm transition-all duration-200 focus:border-primary focus:ring-4 focus:ring-primary/10 sm:min-h-[140px]"
 					bind:value={playgroundMessage}
 					oninput={updateCostEstimate}
 					onkeydown={(event) => {
@@ -581,16 +584,16 @@
 				<div class="absolute bottom-3 left-3 flex items-center gap-3">
 					<Button
 						size="icon"
-						class="inline-flex items-center justify-center w-10 h-10 transition rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+						class="inline-flex h-12 min-h-[48px] w-12 min-w-[48px] items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-200 hover:scale-105 hover:bg-primary/90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
 						aria-label="Send message"
 						disabled={!canSendMessage}
 						onclick={() => {
 							sendPlaygroundMessage();
 						}}
 					>
-						<Send class="w-4 h-4" />
+						<Send class="h-4 w-4" />
 					</Button>
-					<div class="text-xs text-muted-foreground">
+					<div class="text-muted-foreground text-xs">
 						{isSending
 							? 'Sending…'
 							: !provider || !playgroundModel || (requiresPrompt && !playgroundPromptId)
@@ -600,34 +603,35 @@
 				</div>
 			</div>
 		</div>
-
 	</div>
 
 	<aside
-		class="fixed inset-y-0 right-0 z-40 flex min-h-0 w-80 flex-col border-l border-border/60 bg-card p-4 shadow-lg transition-transform duration-300 ease-out sm:p-6 lg:static lg:z-0 lg:w-auto lg:translate-x-0 lg:rounded-r-2xl lg:rounded-l-none lg:rounded-t-2xl lg:shadow-none lg:border-l-0 {isSettingsOpen
+		class="fixed inset-y-0 right-0 z-40 flex min-h-0 w-80 flex-col border-l border-border/60 bg-card p-4 shadow-lg transition-transform duration-300 ease-out sm:p-6 lg:static lg:z-0 lg:w-auto lg:flex-shrink-0 lg:translate-x-0 lg:rounded-t-2xl lg:rounded-l-none lg:rounded-r-2xl lg:border-l-0 lg:p-8 lg:shadow-none {isSettingsOpen
 			? 'translate-x-0'
 			: 'translate-x-full lg:translate-x-0'}"
 	>
 		<div class="flex items-center justify-between">
 			<div>
-				<h3 class="text-lg font-semibold">Model & settings</h3>
-				<div class="text-xs text-muted-foreground">Tune the run before you send</div>
+				<h3 class="text-lg font-semibold lg:text-xl">Model & settings</h3>
+				<div class="text-muted-foreground text-xs lg:text-sm">Tune the run before you send</div>
 			</div>
-			<div class="text-[11px] text-muted-foreground">Live estimate</div>
+			<div class="text-muted-foreground text-[11px]">Live estimate</div>
 		</div>
-		<div class="flex flex-col flex-1 min-h-0 mt-4 space-y-4 overflow-auto">
+		<div class="mt-4 flex min-h-0 flex-1 flex-col space-y-4 overflow-auto">
 			{#if playgroundError}
-				<div class="p-3 text-xs rounded-2xl border-destructive/40 bg-destructive/10 text-destructive">
+				<div
+					class="rounded-2xl border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive"
+				>
 					{playgroundError}
 				</div>
 			{/if}
-			<div class="p-4 rounded-2xl bg-background/70">
-				<div class="text-xs font-semibold tracking-wide uppercase text-muted-foreground">
+			<div class="rounded-2xl bg-background/70 p-4">
+				<div class="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
 					Prompt, provider & model
 				</div>
-				<div class="grid gap-3 mt-3">
+				<div class="mt-3 grid gap-3">
 					<NativeSelect
-						class="h-10 px-3 text-sm rounded-md bg-background"
+						class="h-11 rounded-lg border-2 border-muted bg-background px-3 text-sm transition-all duration-200 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
 						bind:value={playgroundPromptId}
 					>
 						<NativeSelectOption value="">Select saved prompt</NativeSelectOption>
@@ -636,7 +640,7 @@
 						{/each}
 					</NativeSelect>
 					<NativeSelect
-						class="h-10 px-3 text-sm rounded-md bg-background"
+						class="h-11 rounded-lg border-2 border-muted bg-background px-3 text-sm transition-all duration-200 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
 						bind:value={selectedModelId}
 						onchange={updateCostEstimate}
 					>
@@ -647,23 +651,19 @@
 					</NativeSelect>
 					{#if selectedModelId === 'custom'}
 						<Input
-							class="h-10 px-3 text-sm rounded-md bg-background"
+							class="h-11 rounded-lg border-2 border-muted bg-background px-3 text-sm transition-all duration-200 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
 							bind:value={customModelId}
 							oninput={updateCostEstimate}
 							placeholder="Enter custom model id"
 						/>
-						<div class="text-[11px] text-muted-foreground">
-							Stored with the session for recall.
-						</div>
+						<div class="text-muted-foreground text-[11px]">Stored with the session for recall.</div>
 					{:else}
-						<div class="text-[11px] text-muted-foreground">
-							Models loaded from settings / API
-						</div>
+						<div class="text-muted-foreground text-[11px]">Models loaded from settings / API</div>
 					{/if}
-					<label class="text-xs text-muted-foreground">
+					<label class="text-muted-foreground text-xs">
 						Max tokens
 						<Input
-							class="w-full px-3 mt-2 rounded-md h-9 bg-background"
+							class="mt-2 h-10 w-full rounded-lg border-2 border-muted bg-background px-3 transition-all duration-200 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
 							type="number"
 							bind:value={playgroundTokens}
 							oninput={updateCostEstimate}
@@ -671,19 +671,19 @@
 					</label>
 				</div>
 			</div>
-			<div class="p-4 rounded-2xl bg-background/70">
-				<div class="text-xs font-semibold tracking-wide uppercase text-muted-foreground">
+			<div class="rounded-2xl bg-background/70 p-4">
+				<div class="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
 					Parameters
 				</div>
-				<div class="grid gap-4 mt-4">
+				<div class="mt-4 grid gap-4">
 					<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-						<label class="text-xs text-muted-foreground">
+						<label class="text-muted-foreground text-xs">
 							<div class="flex items-center justify-between">
 								<span>Temp</span>
 								<span class="text-[11px] text-foreground">{playgroundTemp}</span>
 							</div>
 							<input
-								class="w-full mt-2"
+								class="mt-2 h-2 w-full cursor-pointer appearance-none rounded-lg bg-muted accent-primary hover:accent-primary/80"
 								type="range"
 								min="0"
 								max="2"
@@ -691,13 +691,13 @@
 								bind:value={playgroundTemp}
 							/>
 						</label>
-						<label class="text-xs text-muted-foreground">
+						<label class="text-muted-foreground text-xs">
 							<div class="flex items-center justify-between">
 								<span>Top P</span>
 								<span class="text-[11px] text-foreground">{playgroundTopP}</span>
 							</div>
 							<input
-								class="w-full mt-2"
+								class="mt-2 h-2 w-full cursor-pointer appearance-none rounded-lg bg-muted accent-primary hover:accent-primary/80"
 								type="range"
 								min="0"
 								max="1"
@@ -707,13 +707,13 @@
 						</label>
 					</div>
 					<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-						<label class="text-xs text-muted-foreground">
+						<label class="text-muted-foreground text-xs">
 							<div class="flex items-center justify-between">
 								<span>Frequency penalty</span>
 								<span class="text-[11px] text-foreground">{playgroundFrequency}</span>
 							</div>
 							<input
-								class="w-full mt-2"
+								class="mt-2 h-2 w-full cursor-pointer appearance-none rounded-lg bg-muted accent-primary hover:accent-primary/80"
 								type="range"
 								min="-2"
 								max="2"
@@ -721,13 +721,13 @@
 								bind:value={playgroundFrequency}
 							/>
 						</label>
-						<label class="text-xs text-muted-foreground">
+						<label class="text-muted-foreground text-xs">
 							<div class="flex items-center justify-between">
 								<span>Presence penalty</span>
 								<span class="text-[11px] text-foreground">{playgroundPresence}</span>
 							</div>
 							<input
-								class="w-full mt-2"
+								class="mt-2 h-2 w-full cursor-pointer appearance-none rounded-lg bg-muted accent-primary hover:accent-primary/80"
 								type="range"
 								min="-2"
 								max="2"
@@ -738,7 +738,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="grid gap-2 p-4 text-xs rounded-2xl bg-muted/30 text-muted-foreground">
+			<div class="text-muted-foreground grid gap-2 rounded-2xl bg-muted/30 p-4 text-xs">
 				<div class="flex items-center justify-between">
 					<span>Tokens</span>
 					<span class="text-foreground">{playgroundTokenEstimate}</span>

@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, like, or } from 'drizzle-orm';
 import {
   llmFiles,
   llmFileVersions,
@@ -12,187 +12,199 @@ import type {
 import { BaseRepository } from "./base-repository";
 
 export class LlmFileRepository extends BaseRepository {
-  private mapFile(row: typeof llmFiles.$inferSelect): LlmFile {
-    return { ...row };
-  }
+	private mapFile(row: typeof llmFiles.$inferSelect): LlmFile {
+		return { ...row };
+	}
 
-  private mapVersion(row: typeof llmFileVersions.$inferSelect): LlmFileVersion {
-    return {
-      ...row,
-      label: row.label ?? undefined,
-      commitMessage: row.commitMessage ?? undefined,
-    };
-  }
+	private mapVersion(row: typeof llmFileVersions.$inferSelect): LlmFileVersion {
+		return {
+			...row,
+			label: row.label ?? undefined,
+			commitMessage: row.commitMessage ?? undefined
+		};
+	}
 
-  async listByUserId(userId: string): Promise<LlmFile[]> {
-    const results = await this.db
-      .select()
-      .from(llmFiles)
-      .where(and(eq(llmFiles.userId, userId), eq(llmFiles.isDeleted, false)))
-      .orderBy(desc(llmFiles.updatedAt));
+	async listByUserId(userId: string): Promise<LlmFile[]> {
+		const results = await this.db
+			.select()
+			.from(llmFiles)
+			.where(and(eq(llmFiles.userId, userId), eq(llmFiles.isDeleted, false)))
+			.orderBy(desc(llmFiles.updatedAt));
 
-    return results.map((row) => this.mapFile(row));
-  }
+		return results.map((row) => this.mapFile(row));
+	}
 
-  async getById(id: string, userId: string): Promise<LlmFile | null> {
-    const result = await this.db
-      .select()
-      .from(llmFiles)
-      .where(and(eq(llmFiles.id, id), eq(llmFiles.userId, userId)))
-      .limit(1);
+	async searchByUserId(userId: string, query: string, limit = 20): Promise<LlmFile[]> {
+		const term = `%${query}%`;
+		const results = await this.db
+			.select()
+			.from(llmFiles)
+			.where(
+				and(eq(llmFiles.userId, userId), eq(llmFiles.isDeleted, false), like(llmFiles.title, term))
+			)
+			.limit(limit)
+			.orderBy(desc(llmFiles.updatedAt));
 
-    return result[0] ? this.mapFile(result[0]) : null;
-  }
+		return results.map((row) => this.mapFile(row));
+	}
 
-  async create(data: CreateLlmFileInput, userId: string): Promise<LlmFile> {
-    return this.db.transaction((tx) => {
-      const id = crypto.randomUUID();
-      const now = Math.floor(Date.now() / 1000);
-      const inserted = tx
-        .insert(llmFiles)
-        .values({
-          id,
-          userId,
-          title: data.title,
-        })
-        .returning()
-        .all();
+	async getById(id: string, userId: string): Promise<LlmFile | null> {
+		const result = await this.db
+			.select()
+			.from(llmFiles)
+			.where(and(eq(llmFiles.id, id), eq(llmFiles.userId, userId)))
+			.limit(1);
 
-      const fileRow =
-        inserted[0] ??
-        ({
-          id,
-          userId,
-          title: data.title,
-          currentVersion: 1,
-          isDeleted: false,
-          createdAt: now,
-          updatedAt: now,
-        } as typeof llmFiles.$inferSelect);
+		return result[0] ? this.mapFile(result[0]) : null;
+	}
 
-      tx.insert(llmFileVersions).values({
-        llmFileId: fileRow.id ?? id,
-        userId,
-        versionNumber: 1,
-        content: data.content,
-        label: data.label,
-        commitMessage: data.commitMessage,
-        schemaValid: true,
-      }).run();
+	async create(data: CreateLlmFileInput, userId: string): Promise<LlmFile> {
+		return this.db.transaction((tx) => {
+			const id = crypto.randomUUID();
+			const now = Math.floor(Date.now() / 1000);
+			const inserted = tx
+				.insert(llmFiles)
+				.values({
+					id,
+					userId,
+					title: data.title
+				})
+				.returning()
+				.all();
 
-      return this.mapFile(fileRow);
-    });
-  }
+			const fileRow =
+				inserted[0] ??
+				({
+					id,
+					userId,
+					title: data.title,
+					currentVersion: 1,
+					isDeleted: false,
+					createdAt: now,
+					updatedAt: now
+				} as typeof llmFiles.$inferSelect);
 
-  async update(
-    id: string,
-    userId: string,
-    updates: UpdateLlmFileInput,
-  ): Promise<LlmFile | null> {
-    return this.db.transaction((tx) => {
-      const existing = tx
-        .select()
-        .from(llmFiles)
-        .where(and(eq(llmFiles.id, id), eq(llmFiles.userId, userId)))
-        .limit(1)
-        .all();
+			tx.insert(llmFileVersions)
+				.values({
+					llmFileId: fileRow.id ?? id,
+					userId,
+					versionNumber: 1,
+					content: data.content,
+					label: data.label,
+					commitMessage: data.commitMessage,
+					schemaValid: true
+				})
+				.run();
 
-      if (!existing[0]) return null;
+			return this.mapFile(fileRow);
+		});
+	}
 
-      const updateData: Record<string, unknown> = {
-        updatedAt: Math.floor(Date.now() / 1000),
-      };
+	async update(id: string, userId: string, updates: UpdateLlmFileInput): Promise<LlmFile | null> {
+		return this.db.transaction((tx) => {
+			const existing = tx
+				.select()
+				.from(llmFiles)
+				.where(and(eq(llmFiles.id, id), eq(llmFiles.userId, userId)))
+				.limit(1)
+				.all();
 
-      if (updates.title !== undefined) updateData.title = updates.title;
-      if (updates.isDeleted !== undefined) updateData.isDeleted = updates.isDeleted;
+			if (!existing[0]) return null;
 
-      if (updates.content !== undefined) {
-        const latestVersion = tx
-          .select()
-          .from(llmFileVersions)
-          .where(
-            and(eq(llmFileVersions.llmFileId, id), eq(llmFileVersions.userId, userId)),
-          )
-          .orderBy(desc(llmFileVersions.versionNumber))
-          .limit(1)
-          .all();
+			const updateData: Record<string, unknown> = {
+				updatedAt: Math.floor(Date.now() / 1000)
+			};
 
-        const nextVersion = (latestVersion[0]?.versionNumber ?? 0) + 1;
+			if (updates.title !== undefined) updateData.title = updates.title;
+			if (updates.isDeleted !== undefined) updateData.isDeleted = updates.isDeleted;
 
-        tx.insert(llmFileVersions).values({
-          llmFileId: id,
-          userId,
-          versionNumber: nextVersion,
-          content: updates.content,
-          label: updates.label,
-          commitMessage: updates.commitMessage,
-          schemaValid: true,
-        }).run();
+			if (updates.content !== undefined) {
+				const latestVersion = tx
+					.select()
+					.from(llmFileVersions)
+					.where(and(eq(llmFileVersions.llmFileId, id), eq(llmFileVersions.userId, userId)))
+					.orderBy(desc(llmFileVersions.versionNumber))
+					.limit(1)
+					.all();
 
-        updateData.currentVersion = nextVersion;
-      }
+				const nextVersion = (latestVersion[0]?.versionNumber ?? 0) + 1;
 
-      const updated = tx
-        .update(llmFiles)
-        .set(updateData)
-        .where(and(eq(llmFiles.id, id), eq(llmFiles.userId, userId)))
-        .returning()
-        .all();
+				tx.insert(llmFileVersions)
+					.values({
+						llmFileId: id,
+						userId,
+						versionNumber: nextVersion,
+						content: updates.content,
+						label: updates.label,
+						commitMessage: updates.commitMessage,
+						schemaValid: true
+					})
+					.run();
 
-      const updatedRow =
-        updated[0] ??
-        ({
-          ...existing[0],
-          ...updateData,
-        } as typeof llmFiles.$inferSelect);
+				updateData.currentVersion = nextVersion;
+			}
 
-      return updatedRow ? this.mapFile(updatedRow) : null;
-    });
-  }
+			const updated = tx
+				.update(llmFiles)
+				.set(updateData)
+				.where(and(eq(llmFiles.id, id), eq(llmFiles.userId, userId)))
+				.returning()
+				.all();
 
-  async listVersions(fileId: string, userId: string): Promise<LlmFileVersion[]> {
-    const results = await this.db
-      .select()
-      .from(llmFileVersions)
-      .where(and(eq(llmFileVersions.llmFileId, fileId), eq(llmFileVersions.userId, userId)))
-      .orderBy(desc(llmFileVersions.versionNumber));
+			const updatedRow =
+				updated[0] ??
+				({
+					...existing[0],
+					...updateData
+				} as typeof llmFiles.$inferSelect);
 
-    return results.map((row) => this.mapVersion(row));
-  }
+			return updatedRow ? this.mapFile(updatedRow) : null;
+		});
+	}
 
-  async deleteVersion(fileId: string, versionId: string, userId: string): Promise<number | null> {
-    return this.db.transaction((tx) => {
-      const versions = tx
-        .select()
-        .from(llmFileVersions)
-        .where(and(eq(llmFileVersions.llmFileId, fileId), eq(llmFileVersions.userId, userId)))
-        .orderBy(desc(llmFileVersions.versionNumber))
-        .all();
+	async listVersions(fileId: string, userId: string): Promise<LlmFileVersion[]> {
+		const results = await this.db
+			.select()
+			.from(llmFileVersions)
+			.where(and(eq(llmFileVersions.llmFileId, fileId), eq(llmFileVersions.userId, userId)))
+			.orderBy(desc(llmFileVersions.versionNumber));
 
-      if (versions.length <= 1) return null;
+		return results.map((row) => this.mapVersion(row));
+	}
 
-      const target = versions.find((version) => version.id === versionId);
-      if (!target) return null;
+	async deleteVersion(fileId: string, versionId: string, userId: string): Promise<number | null> {
+		return this.db.transaction((tx) => {
+			const versions = tx
+				.select()
+				.from(llmFileVersions)
+				.where(and(eq(llmFileVersions.llmFileId, fileId), eq(llmFileVersions.userId, userId)))
+				.orderBy(desc(llmFileVersions.versionNumber))
+				.all();
 
-      tx.delete(llmFileVersions).where(
-        and(
-          eq(llmFileVersions.id, versionId),
-          eq(llmFileVersions.llmFileId, fileId),
-          eq(llmFileVersions.userId, userId),
-        ),
-      );
+			if (versions.length <= 1) return null;
 
-      const remaining = versions.filter((version) => version.id !== versionId);
-      const nextVersion = remaining[0]?.versionNumber ?? 1;
+			const target = versions.find((version) => version.id === versionId);
+			if (!target) return null;
 
-      tx.update(llmFiles)
-        .set({
-          currentVersion: nextVersion,
-          updatedAt: Math.floor(Date.now() / 1000),
-        })
-        .where(and(eq(llmFiles.id, fileId), eq(llmFiles.userId, userId)));
+			tx.delete(llmFileVersions).where(
+				and(
+					eq(llmFileVersions.id, versionId),
+					eq(llmFileVersions.llmFileId, fileId),
+					eq(llmFileVersions.userId, userId)
+				)
+			);
 
-      return nextVersion;
-    });
-  }
+			const remaining = versions.filter((version) => version.id !== versionId);
+			const nextVersion = remaining[0]?.versionNumber ?? 1;
+
+			tx.update(llmFiles)
+				.set({
+					currentVersion: nextVersion,
+					updatedAt: Math.floor(Date.now() / 1000)
+				})
+				.where(and(eq(llmFiles.id, fileId), eq(llmFiles.userId, userId)));
+
+			return nextVersion;
+		});
+	}
 }

@@ -13,11 +13,7 @@ import { AiProviderSettingsRepository } from '$lib/server/external_modules/MoLOS
 import { runHumanizerPipeline } from '../../../lib/utils/humanizer';
 import { db } from '$lib/server/db';
 
-const safeFetch = async <T>(
-	fetcher: typeof fetch,
-	url: string,
-	fallback: T
-): Promise<T> => {
+const safeFetch = async <T>(fetcher: typeof fetch, url: string, fallback: T): Promise<T> => {
 	try {
 		const res = await fetcher(url);
 		if (!res.ok) return fallback;
@@ -47,11 +43,16 @@ export const load: PageServerLoad = async ({ fetch }) => {
 	};
 };
 
-const optionalNumber = (schema: z.ZodNumber) =>
-	z.preprocess((value) => {
-		if (value === '' || value === null || value === undefined) return undefined;
-		return value;
-	}, schema.optional());
+const optionalNumber = (schema: z.ZodNumber | any) =>
+	z.preprocess(
+		(value) => {
+			if (value === '' || value === null || value === undefined) return undefined;
+			return value;
+		},
+		'_def' in schema && schema._def.typeName === 'ZodEffects'
+			? (schema as any)._def.schema.optional()
+			: schema.optional()
+	);
 
 const HumanizeSchema = z.object({
 	inputText: z.string().min(1),

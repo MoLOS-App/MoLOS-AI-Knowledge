@@ -1,11 +1,7 @@
 import type { PageServerLoad } from './$types';
 import type { AbTest } from '../../models';
 
-const safeFetch = async <T>(
-	fetcher: typeof fetch,
-	url: string,
-	fallback: T
-): Promise<T> => {
+const safeFetch = async <T>(fetcher: typeof fetch, url: string, fallback: T): Promise<T> => {
 	try {
 		const res = await fetcher(url);
 		if (!res.ok) return fallback;

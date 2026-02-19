@@ -1,4 +1,4 @@
-import { derived, writable } from "svelte/store";
+import { derived, writable } from 'svelte/store';
 import type {
   AbTest,
   AiProviderSettings,
@@ -21,82 +21,81 @@ export const analyticsStore = writable<UsageAnalytic[]>([]);
 export const aiProviderSettingsStore = writable<AiProviderSettings | null>(null);
 
 export const moduleUIState = writable({
-  loading: false,
-  error: null as string | null,
-  lastLoaded: null as number | null,
+	loading: false,
+	error: null as string | null,
+	lastLoaded: null as number | null
 });
 
 export const promptStats = derived(promptsStore, ($prompts) => {
-  const total = $prompts.length;
-  const deleted = $prompts.filter((p) => p.isDeleted).length;
+	const total = $prompts.length;
+	const deleted = $prompts.filter((p) => p.isDeleted).length;
 
-  return { total, deleted };
+	return { total, deleted };
 });
 
 export async function loadModuleData() {
-  moduleUIState.update((state) => ({ ...state, loading: true, error: null }));
+	moduleUIState.update((state) => ({ ...state, loading: true, error: null }));
 
-  try {
-    const [prompts, files, sessions, jobs, chains, tests, analytics, settings] =
-      await Promise.all([
-        api.fetchPrompts(),
-        api.fetchLlmFiles(),
-        api.fetchPlaygroundSessions(),
-        api.fetchHumanizerJobs(),
-        api.fetchPromptChains(),
-        api.fetchAbTests(),
-        api.fetchAnalytics(),
-        api.fetchAiProviderSettings(),
-      ]);
+	try {
+		const [prompts, files, sessions, jobs, chains, tests, analytics, settings] = await Promise.all([
+			api.fetchPrompts(),
+			api.fetchLlmFiles(),
+			api.fetchPlaygroundSessions(),
+			api.fetchHumanizerJobs(),
+			api.fetchPromptChains(),
+			api.fetchAbTests(),
+			api.fetchAnalytics(),
+			api.fetchAiProviderSettings()
+		]);
 
-    promptsStore.set(prompts);
-    llmFilesStore.set(files);
-    sessionsStore.set(sessions);
-    humanizerStore.set(jobs);
-    chainsStore.set(chains);
-    abTestsStore.set(tests);
-    analyticsStore.set(analytics);
-    aiProviderSettingsStore.set(settings);
+		promptsStore.set(prompts);
+		llmFilesStore.set(files);
+		sessionsStore.set(sessions);
+		humanizerStore.set(jobs);
+		chainsStore.set(chains);
+		abTestsStore.set(tests);
+		analyticsStore.set(analytics);
+		aiProviderSettingsStore.set(settings);
 
-    moduleUIState.update((state) => ({
-      ...state,
-      loading: false,
-      lastLoaded: Date.now(),
-    }));
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to load module data";
-    moduleUIState.update((state) => ({ ...state, loading: false, error: message }));
-  }
+		moduleUIState.update((state) => ({
+			...state,
+			loading: false,
+			lastLoaded: Date.now()
+		}));
+	} catch (err) {
+		const message = err instanceof Error ? err.message : 'Failed to load module data';
+		moduleUIState.update((state) => ({ ...state, loading: false, error: message }));
+	}
 }
 
 export async function refreshPrompts() {
-  promptsStore.set(await api.fetchPrompts());
+	promptsStore.set(await api.fetchPrompts());
 }
 
 export async function refreshLlmFiles() {
-  llmFilesStore.set(await api.fetchLlmFiles());
+	llmFilesStore.set(await api.fetchLlmFiles());
 }
 
 export async function refreshSessions() {
-  sessionsStore.set(await api.fetchPlaygroundSessions());
+	sessionsStore.set(await api.fetchPlaygroundSessions());
 }
 
 export async function refreshHumanizerJobs() {
-  humanizerStore.set(await api.fetchHumanizerJobs());
+	humanizerStore.set(await api.fetchHumanizerJobs());
 }
 
 export async function refreshChains() {
-  chainsStore.set(await api.fetchPromptChains());
+	chainsStore.set(await api.fetchPromptChains());
 }
 
 export async function refreshAbTests() {
-  abTestsStore.set(await api.fetchAbTests());
+	abTestsStore.set(await api.fetchAbTests());
 }
 
 export async function refreshAnalytics() {
-  analyticsStore.set(await api.fetchAnalytics());
+	analyticsStore.set(await api.fetchAnalytics());
 }
 
 export async function refreshAiProviderSettings() {
-  aiProviderSettingsStore.set(await api.fetchAiProviderSettings());
+	aiProviderSettingsStore.set(await api.fetchAiProviderSettings());
 }

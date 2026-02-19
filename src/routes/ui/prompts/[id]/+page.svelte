@@ -10,18 +10,8 @@
 	import type { PageData } from './$types';
 	import { toast } from 'svelte-sonner';
 	import { fade, fly } from 'svelte/transition';
-	import {
-		Dialog,
-		DialogContent,
-		DialogHeader,
-		DialogTitle
-	} from '$lib/components/ui/dialog';
-	import {
-		Sheet,
-		SheetContent,
-		SheetHeader,
-		SheetTitle
-	} from '$lib/components/ui/sheet';
+	import { Dialog, DialogContent, DialogHeader, DialogTitle } from '$lib/components/ui/dialog';
+	import { Sheet, SheetContent, SheetHeader, SheetTitle } from '$lib/components/ui/sheet';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
@@ -185,27 +175,34 @@
 		});
 </script>
 
-<section class="space-y-6" in:fade={{ duration: 180 }}>
-	<header class="rounded-[28px] border bg-card/80 p-6 shadow-sm" in:fly={{ y: 12, duration: 220 }}>
+<svelte:head>
+	<title>Edit Prompt - MoLOS AI Knowledge</title>
+	<meta name="description" content="Edit and manage your AI prompts with version control." />
+</svelte:head>
+
+<section class="space-y-6 xl:space-y-8" in:fade={{ duration: 180 }}>
+	<header
+		class="rounded-2xl border bg-card/80 p-6 shadow-sm lg:p-8 xl:p-10"
+		in:fly={{ y: 12, duration: 220 }}
+	>
 		<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 			<div class="space-y-2">
 				<input
-					class="w-full bg-transparent text-2xl font-semibold tracking-tight outline-none placeholder:text-muted-foreground border-b focus:border-foreground border-foreground/20 sm:max-w-2xl"
+					class="placeholder:text-muted-foreground w-full border-b-2 border-transparent bg-transparent text-2xl font-semibold tracking-tight transition-colors duration-200 outline-none focus:border-primary sm:max-w-2xl lg:max-w-3xl lg:text-3xl"
 					bind:value={promptTitle}
 					placeholder="Untitled prompt"
 				/>
-				<textarea
-					class="w-full resize-none bg-transparent text-sm text-muted-foreground outline-none placeholder:text-muted-foreground border-b focus:border-foreground border-foreground/20 sm:max-w-2xl"
+				<Input
+					class="text-muted-foreground w-full border-transparent bg-transparent px-0 text-sm focus-visible:bg-muted/30 sm:max-w-2xl lg:max-w-3xl lg:text-base"
 					bind:value={promptDescription}
 					placeholder="Add a short description"
-					rows={1}
-				></textarea>
+				/>
 			</div>
 			<div class="flex flex-wrap items-center gap-3 sm:justify-end">
 				<Button
 					variant="outline"
 					size="sm"
-					class="rounded-full px-4 py-2 text-md font-semibold"
+					class="text-md min-h-[44px] rounded-full px-4 py-2 font-semibold transition-all duration-200 hover:bg-muted"
 					onclick={() => goto('/ui/MoLOS-AI-Knowledge/prompts')}
 				>
 					Go back
@@ -214,34 +211,39 @@
 		</div>
 	</header>
 
-	<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]" in:fade={{ duration: 180 }}>
-		<div class="space-y-6">
-			<section class="rounded-[28px] border bg-card/80 p-6 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
+	<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-8" in:fade={{ duration: 180 }}>
+		<div class="space-y-6 xl:space-y-8">
+			<section
+				class="rounded-2xl border bg-card/80 p-6 shadow-sm lg:p-8 xl:p-10"
+				in:fly={{ y: 10, duration: 200 }}
+			>
 				<div class="flex items-center justify-between">
-					<h3 class="text-sm font-semibold">Prompt content</h3>
-					<span class="text-xs text-muted-foreground">Main draft</span>
+					<h3 class="text-sm font-semibold lg:text-base">Prompt content</h3>
+					<span class="text-muted-foreground text-xs lg:text-sm">Main draft</span>
 				</div>
 				<Textarea
-					class="mt-4 min-h-[420px] w-full rounded-md border bg-background p-3 text-sm"
+					class="mt-4 min-h-[420px] w-full rounded-xl border-2 border-muted bg-background p-4 text-sm transition-all duration-200 focus:border-primary focus:ring-4 focus:ring-primary/10"
 					bind:value={promptContent}
 					placeholder="Write the prompt content (Markdown supported)"
 				/>
 			</section>
 		</div>
 
-		<aside class="space-y-4">
-
-			<div class="rounded-[28px] border bg-card/80 p-5 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
-				<h3 class="text-sm font-semibold">Commit</h3>
+		<aside class="space-y-4 xl:space-y-5">
+			<div
+				class="rounded-2xl border bg-card/80 p-5 shadow-sm lg:p-6"
+				in:fly={{ y: 10, duration: 200 }}
+			>
+				<h3 class="text-sm font-semibold lg:text-base">Commit</h3>
 				<div class="mt-4 grid gap-3">
 					<Input
-						class="h-10 w-full rounded-md border bg-background px-3 text-sm"
+						class="h-11 w-full rounded-lg border-2 border-muted bg-background px-4 text-sm transition-all duration-200 focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
 						bind:value={promptCommit}
 						placeholder="Commit message (optional)"
 					/>
 					<Button
 						size="sm"
-						class="rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background"
+						class="min-h-[44px] rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background transition-all duration-200 hover:opacity-90"
 						onclick={savePrompt}
 					>
 						{isNew ? 'Create prompt' : 'Save changes'}
@@ -249,16 +251,19 @@
 				</div>
 			</div>
 
-			<section class="rounded-[28px] border bg-card/80 p-5 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
-				<h3 class="text-sm font-semibold">Version</h3>
+			<section
+				class="rounded-2xl border bg-card/80 p-5 shadow-sm lg:p-6"
+				in:fly={{ y: 10, duration: 200 }}
+			>
+				<h3 class="text-sm font-semibold lg:text-base">Version</h3>
 				<div class="mt-4 flex items-center justify-between text-sm">
-					<div class="text-xs text-muted-foreground">Current</div>
+					<div class="text-muted-foreground text-xs">Current</div>
 					<div class="text-sm font-semibold">v{currentVersion}</div>
 				</div>
 				<Button
 					variant="outline"
 					size="sm"
-					class="mt-4 w-full rounded-full px-3 py-2 text-xs font-semibold"
+					class="mt-4 min-h-[44px] w-full rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 hover:bg-muted"
 					onclick={() => {
 						versionsOpen = true;
 					}}
@@ -267,13 +272,16 @@
 				</Button>
 			</section>
 
-			<section class="rounded-[28px] border bg-card/80 p-5 shadow-sm" in:fly={{ y: 10, duration: 200 }}>
-				<h3 class="text-sm font-semibold">Actions</h3>
+			<section
+				class="rounded-2xl border bg-card/80 p-5 shadow-sm lg:p-6"
+				in:fly={{ y: 10, duration: 200 }}
+			>
+				<h3 class="text-sm font-semibold lg:text-base">Actions</h3>
 				<div class="mt-4 flex flex-col gap-2">
 					<Button
 						variant="outline"
 						size="sm"
-						class="rounded-full px-3 py-2 text-xs font-semibold"
+						class="min-h-[44px] rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 hover:bg-muted"
 						onclick={sharePrompt}
 						disabled={!promptId}
 					>
@@ -282,7 +290,7 @@
 					<Button
 						variant="outline"
 						size="sm"
-						class="rounded-full px-3 py-2 text-xs font-semibold text-destructive"
+						class="min-h-[44px] rounded-full px-4 py-2 text-xs font-semibold text-destructive transition-all duration-200 hover:bg-destructive/10 hover:text-destructive"
 						onclick={deletePromptItem}
 						disabled={!promptId}
 					>
@@ -290,7 +298,6 @@
 					</Button>
 				</div>
 			</section>
-
 		</aside>
 	</div>
 </section>
@@ -299,56 +306,58 @@
 	<SheetContent class="rounded-none p-0 sm:max-w-md">
 		<SheetHeader class="border-b bg-background/80 px-5 py-4 backdrop-blur">
 			<SheetTitle>Versions</SheetTitle>
-			<p class="text-xs text-muted-foreground">{data.versions.length} total</p>
+			<p class="text-muted-foreground text-xs">{data.versions.length} total</p>
 		</SheetHeader>
-	<div class="flex-1 overflow-auto px-5 py-4">
-		<div class="space-y-3">
-		{#if data.versions.length === 0}
-			<p class="text-xs text-muted-foreground">No versions yet.</p>
-		{:else}
-			{#each data.versions as version}
-				<div class="rounded-xl border bg-background/70 p-3">
-					<div class="flex items-start justify-between gap-2">
-						<div>
-							<div class="text-xs font-semibold">v{version.versionNumber}</div>
-							<div class="text-[11px] text-muted-foreground">
-								{version.commitMessage || 'No message'}
-							</div>
-							<div class="text-[10px] text-muted-foreground">
-								{formatTimestamp(version.createdAt)}
+		<div class="flex-1 overflow-auto scroll-smooth px-5 py-4">
+			<div class="space-y-3">
+				{#if data.versions.length === 0}
+					<p class="text-muted-foreground text-xs">No versions yet.</p>
+				{:else}
+					{#each data.versions as version}
+						<div
+							class="rounded-xl border-2 border-border/60 bg-background/70 p-3 transition-colors hover:border-border/80"
+						>
+							<div class="flex items-start justify-between gap-2">
+								<div>
+									<div class="text-xs font-semibold">v{version.versionNumber}</div>
+									<div class="text-muted-foreground text-[11px]">
+										{version.commitMessage || 'No message'}
+									</div>
+									<div class="text-muted-foreground text-[10px]">
+										{formatTimestamp(version.createdAt)}
+									</div>
+								</div>
+								<div class="flex flex-col gap-2 text-[10px]">
+									<Button
+										variant="outline"
+										size="sm"
+										class="min-h-[36px] rounded-full px-3 py-1.5 transition-all duration-200 hover:bg-muted"
+										onclick={() => viewVersion(version)}
+									>
+										View
+									</Button>
+									<Button
+										variant="outline"
+										size="sm"
+										class="min-h-[36px] rounded-full px-3 py-1.5 transition-all duration-200 hover:bg-muted"
+										onclick={() => restoreVersion(version)}
+									>
+										Restore
+									</Button>
+									<Button
+										variant="outline"
+										size="sm"
+										class="min-h-[36px] rounded-full px-3 py-1.5 text-destructive transition-all duration-200 hover:bg-destructive/10 hover:text-destructive"
+										onclick={() => removeVersion(version)}
+										disabled={deletingVersionId === version.id}
+									>
+										Delete
+									</Button>
+								</div>
 							</div>
 						</div>
-						<div class="flex flex-col gap-2 text-[10px]">
-							<Button
-								variant="outline"
-								size="sm"
-								class="rounded-full px-2 py-1"
-								onclick={() => viewVersion(version)}
-							>
-								View
-							</Button>
-							<Button
-								variant="outline"
-								size="sm"
-								class="rounded-full px-2 py-1"
-								onclick={() => restoreVersion(version)}
-							>
-								Restore
-							</Button>
-							<Button
-								variant="outline"
-								size="sm"
-								class="rounded-full px-2 py-1"
-								onclick={() => removeVersion(version)}
-								disabled={deletingVersionId === version.id}
-							>
-								Delete
-							</Button>
-						</div>
-					</div>
-				</div>
-			{/each}
-		{/if}
+					{/each}
+				{/if}
 			</div>
 		</div>
 	</SheetContent>
@@ -360,16 +369,17 @@
 			<DialogTitle class="text-xl font-semibold">Prompt version</DialogTitle>
 		</DialogHeader>
 		{#if activeVersion}
-			<div class="mt-2 space-y-1 text-xs text-muted-foreground">
+			<div class="text-muted-foreground mt-2 space-y-1 text-xs">
 				<div>v{activeVersion.versionNumber}</div>
 				<div>{activeVersion.commitMessage || 'No message'}</div>
 				<div>{formatTimestamp(activeVersion.createdAt)}</div>
 			</div>
-			<pre class="mt-4 max-h-[420px] overflow-auto rounded-md border bg-background/60 p-4 text-[11px]">
+			<pre
+				class="mt-4 max-h-[420px] overflow-auto rounded-md border bg-background/60 p-4 text-[11px]">
 {activeVersion.content}
 			</pre>
 		{:else}
-			<p class="mt-3 text-xs text-muted-foreground">No version selected.</p>
+			<p class="text-muted-foreground mt-3 text-xs">No version selected.</p>
 		{/if}
 	</DialogContent>
 </Dialog>
