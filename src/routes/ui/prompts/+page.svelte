@@ -189,7 +189,15 @@
 			{#each visiblePrompts as prompt, index (prompt.id)}
 				<article
 					class="cursor-pointer rounded-2xl border bg-card/80 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+					role="button"
+					tabindex="0"
 					onclick={() => openEditPrompt(prompt)}
+					onkeydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							openEditPrompt(prompt);
+						}
+					}}
 					in:fly={{ y: 12, duration: 220, delay: index * 20 }}
 					animate:flip
 				>
@@ -235,7 +243,15 @@
 			{#each visibleFiles as file, index (file.id)}
 				<article
 					class="cursor-pointer rounded-2xl border bg-card/80 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+					role="button"
+					tabindex="0"
 					onclick={() => openEditLlmFile(file)}
+					onkeydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							openEditLlmFile(file);
+						}
+					}}
 					in:fly={{ y: 12, duration: 220, delay: index * 20 }}
 					animate:flip
 				>
