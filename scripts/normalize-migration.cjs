@@ -52,7 +52,9 @@ for (const statement of statements) {
 
 	let updated = statement.replace(/ON UPDATE\s+no action/gi, '');
 	updated = updated.replace(/`__new_MoLOS-AI-Knowledge_/g, '`MoLOS-AI-Knowledge_');
-	updated = updated.replace(/^CREATE TABLE\s+/i, 'CREATE TABLE IF NOT EXISTS ');
+	if (!updated.toUpperCase().includes('IF NOT EXISTS')) {
+		updated = updated.replace(/^CREATE TABLE\s+/i, 'CREATE TABLE IF NOT EXISTS ');
+	}
 
 	if (updated.trim()) {
 		normalized.push(updated.trim());
