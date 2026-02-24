@@ -19,6 +19,9 @@ type ToolDefinition = {
 		required?: string[];
 	};
 	execute: (params: any) => Promise<any>;
+	metadata?: {
+		submodule?: string;
+	};
 };
 
 export function getAiTools(userId: string): ToolDefinition[] {
@@ -39,6 +42,7 @@ export function getAiTools(userId: string): ToolDefinition[] {
 					tag: { type: 'string' }
 				}
 			},
+			metadata: { submodule: 'prompts' },
 			execute: async (params) => {
 				return await promptRepo.listByUserId(userId, {
 					search: params.search,
@@ -60,6 +64,7 @@ export function getAiTools(userId: string): ToolDefinition[] {
 				},
 				required: ['title', 'content']
 			},
+			metadata: { submodule: 'prompts' },
 			execute: async (params) => {
 				return await promptRepo.create(
 					{
@@ -89,6 +94,7 @@ export function getAiTools(userId: string): ToolDefinition[] {
 				},
 				required: ['id']
 			},
+			metadata: { submodule: 'prompts' },
 			execute: async (params) => {
 				const updated = await promptRepo.update(params.id, userId, {
 					title: params.title,
@@ -112,6 +118,7 @@ export function getAiTools(userId: string): ToolDefinition[] {
 				},
 				required: ['id']
 			},
+			metadata: { submodule: 'prompts' },
 			execute: async (params) => {
 				const deleted = await promptRepo.softDelete(params.id, userId);
 				if (!deleted) throw new Error('Prompt not found');
@@ -125,6 +132,7 @@ export function getAiTools(userId: string): ToolDefinition[] {
 				type: 'object',
 				properties: {}
 			},
+			metadata: { submodule: 'llm-files' },
 			execute: async () => {
 				return await llmFileRepo.listByUserId(userId);
 			}
@@ -142,6 +150,7 @@ export function getAiTools(userId: string): ToolDefinition[] {
 				},
 				required: ['title', 'content']
 			},
+			metadata: { submodule: 'llm-files' },
 			execute: async (params) => {
 				return await llmFileRepo.create(
 					{
@@ -169,6 +178,7 @@ export function getAiTools(userId: string): ToolDefinition[] {
 				},
 				required: ['id']
 			},
+			metadata: { submodule: 'llm-files' },
 			execute: async (params) => {
 				const updated = await llmFileRepo.update(params.id, userId, {
 					title: params.title,
@@ -190,6 +200,7 @@ export function getAiTools(userId: string): ToolDefinition[] {
 					limit: { type: 'number', default: 20 }
 				}
 			},
+			metadata: { submodule: 'playground' },
 			execute: async (params) => {
 				return await playgroundRepo.listByUserId(userId, params.limit ?? 20);
 			}
@@ -210,6 +221,7 @@ export function getAiTools(userId: string): ToolDefinition[] {
 				},
 				required: ['model', 'settings', 'messages', 'totalTokens', 'totalCost']
 			},
+			metadata: { submodule: 'playground' },
 			execute: async (params) => {
 				return await playgroundRepo.create(userId, {
 					promptId: params.promptId,
@@ -239,6 +251,7 @@ export function getAiTools(userId: string): ToolDefinition[] {
 				},
 				required: ['id']
 			},
+			metadata: { submodule: 'playground' },
 			execute: async (params) => {
 				const updated = await playgroundRepo.update(userId, params.id, {
 					promptId: params.promptId,
@@ -263,6 +276,7 @@ export function getAiTools(userId: string): ToolDefinition[] {
 				},
 				required: ['id']
 			},
+			metadata: { submodule: 'playground' },
 			execute: async (params) => {
 				const deleted = await playgroundRepo.delete(userId, params.id);
 				if (!deleted) throw new Error('Playground session not found');
@@ -271,16 +285,18 @@ export function getAiTools(userId: string): ToolDefinition[] {
 		},
 		{
 			name: 'list_humanizer_jobs',
-			description: 'List recent humanizer jobs for the user.',
+			description: 'List humanizer jobs for the current user.',
 			parameters: {
 				type: 'object',
 				properties: {
-					limit: { type: 'number', default: 20 }
+					limit: { type: 'number', default: 10 }
 				}
 			},
+			metadata: { submodule: 'humanizer' },
 			execute: async (params) => {
-				return await humanizerRepo.listByUserId(userId, params.limit ?? 20);
+				return await humanizerRepo.listByUserId(userId, params.limit ?? 10);
 			}
+		},
 		},
 		{
 			name: 'humanize_text',
