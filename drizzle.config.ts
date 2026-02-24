@@ -5,6 +5,6 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "sqlite",
   dbCredentials: {
-    url: "file:../../molos.db",
+    url: "file:../../data/molos.db",
   },
 });
