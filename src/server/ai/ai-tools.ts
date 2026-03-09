@@ -297,7 +297,6 @@ export function getAiTools(userId: string): ToolDefinition[] {
 				return await humanizerRepo.listByUserId(userId, params.limit ?? 10);
 			}
 		},
-		},
 		{
 			name: 'humanize_text',
 			description: 'Run the humanizer pipeline and store the result as a job.',
